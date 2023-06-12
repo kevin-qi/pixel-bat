@@ -1,4 +1,4 @@
-function [analogData] = loadTrodesAnalog(path_to_recording_dir)
+function [sensors] = loadTrodesAnalog(path_to_recording_dir)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,6 +9,28 @@ mergedAnalog_dirname = dirname + "_merged.analog";
 
 mergedAnalog_filename = dirname + "_merged.timestamps.dat";
 
-analogData = readTrodesExtractedDataFile(fullfile(path_to_recording_dir, mergedAnalog_dirname, mergedAnalog_filename));
+timestampData = readTrodesExtractedDataFile(fullfile(path_to_recording_dir, mergedAnalog_dirname, mergedAnalog_filename));
 
+first_sample_timestamp_usec = double(timestampData.first_timestamp)*1e6/timestampData.clockrate;
+sample_timestamps = timestampData.fields.data;
+sample_timestamps_usec = 1e6 * double(sample_timestamps) / double(timestampData.clockrate);
+
+dio = loadTrodesDigital(path_to_recording_dir);
+isRising = dio{1}.state == 1;
+ttl_timestamps_usec = dio{1}.ttl_timestamp_usec;
+global_sample_timestamps_usec = local2GlobalTime(ttl_timestamps_usec, sample_timestamps_usec);
+close all;
+
+sensorNames = ["Accel", "Gyro"];
+euclideanAxes = ["X", "Y", "Z"];
+sensors = struct();
+for i = 1:length(sensorNames)
+    for j = 1:length(euclideanAxes)
+        fname = join([mergedAnalog_dirname, "_Headstage_", sensorNames(i), euclideanAxes(j), ".dat"],"");
+        data = readTrodesExtractedDataFile(fullfile(path_to_recording_dir, mergedAnalog_dirname, fname));
+        sensorVoltage = data.fields.data;
+        sensors.(lower(sensorNames(i)))(j,:) = sensorVoltage;
+    end
 end
+sensors.global_sample_timestamps_usec = global_sample_timestamps_usec;
+
