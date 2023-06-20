@@ -1,4 +1,4 @@
-path_to_recording_dir = "C:/Users/YartsevPixels1/Desktop/pixel-bat/data/29968/raw/230525/ephys/20230525_124737.rec";
+path_to_recording_dir = "C:\Users\YartsevPixels1\Desktop\pixel-bat\data\b149f\29968\raw\230527\ephys\20230527_094503.rec";
 
 [dirpath, dirname, ext] = fileparts(path_to_recording_dir);
 assert(strcmp(ext, ".rec"), "Trodes recording directory must end in .rec");
@@ -19,10 +19,6 @@ sp_times = double(readNPY(fullfile(phyFile.folder, 'spike_times.npy'))); % Spike
 sp_templates = double(readNPY(fullfile(phyFile.folder, 'amplitudes.npy')));
 
 kilosort_dirname = dir(fullfile(path_to_recording_dir, "*.kilosort")).name;
-timestamp_filename = dir(fullfile(path_to_recording_dir, kilosort_dirname, "*.timestamps.dat")).name;
-timeFile = dir(fullfile(path_to_recording_dir, kilosort_dirname, timestamp_filename));
-timestamp = readTrodesExtractedDataFile(fullfile(timeFile.folder,timeFile.name));
-T = double(timestamp.fields.data(end) - timestamp.fields.data(1)); % length of recording
 start_time = timestamp.fields.data(1);
 end_time = timestamp.fields.data(end);
 sampling_times = timestamp.fields.data;
