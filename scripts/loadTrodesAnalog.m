@@ -33,4 +33,4 @@ for i = 1:length(sensorNames)
     end
 end
 sensors.global_sample_timestamps_usec = global_sample_timestamps_usec;
-
+sensors.local_sample_timestamps_usec = sample_timestamps_usec;
