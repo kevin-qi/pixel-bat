@@ -13,7 +13,7 @@ addOptional(p,'extractKilosort',1);
 addOptional(p,'extractTime',1);
 addOptional(p,'extractDIO',1);
 addOptional(p,'extractSpikes',1);
-addOptional(p,'extractSpikeBand',1);
+addOptional(p,'extractSpikeBand',0);
 addOptional(p,'extractRaw',0);
 addOptional(p,'lfpLowPass', 500);
 addOptional(p,'spikesFreqBand', [600, 6000]);
@@ -33,7 +33,7 @@ lfpLowPass = p.Results.lfpLowPass;
 spikesFreqBand = p.Results.spikesFreqBand;
 
 %% Select appropriate flags for extraction
-possible_flags = ["-lfp", "-analog", "-kilosort", "-dio", "-spikes", "-spikeband", "-time", "-raw"]
+possible_flags = ["-lfp", "-analogio", "-kilosort", "-dio", "-spikes", "-spikeband", "-time", "-raw"]
 flags = possible_flags(logical([extractLFP extractAnalog extractKilosort extractDIO extractSpikes extractSpikeBand extractTime extractRaw]))
 cmd_flags = join(flags);
 
@@ -69,7 +69,7 @@ if(exist(path_to_rec_file))
     formatted_path_to_rec_file = join(['"', path_to_rec_file, '"'], '');
     output_path = join(['"', path_to_rec_dir, '"'], '');
     
-    cmd = join(['trodesexport', cmd_flags, '-rec', formatted_path_to_rec_file, '-outputdirectory', output_path, '-interp -1']); % command to run
+    cmd = join(['trodesexport', cmd_flags, '-rec', formatted_path_to_rec_file, '-outputdirectory', output_path, '-interp 0']); % command to run
     [status, cmdout] = system(cmd); % Export lfp file
     
     chanmap_file = dir(join([path_to_rec_dir, '\*kilosort\*channelmap*.dat']));
