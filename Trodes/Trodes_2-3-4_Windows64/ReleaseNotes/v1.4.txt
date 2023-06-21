@@ -1,0 +1,23 @@
+Release Notes for Trodes Suite version 1.4
+
+
+MAJOR CHANGES
+
+** Improved buffering of data to ensure that data are not lost even if the hardrive become inaccessible for over a second.  If the buffer is overrun, the system will now recover smoothly after the lost section.
+
+**Embedded python in Camera Module.  Still a work in progress, but this will be used to allow custom processing of position information
+
+**Optimized processing of video frames in Camera Module to reduce CPU load
+
+**Added export programs, including ones for Phy Suite and Offline Sorter
+
+
+
+
+MINOR CHANGES
+
+** Improved graphics plotting in channel streaming window.  All done with Open GL.
+
+** Camera Module linearization tool to project animal's position onto a track geometry. Bugs were fixed to allow saving and loading of geometry files.
+
+

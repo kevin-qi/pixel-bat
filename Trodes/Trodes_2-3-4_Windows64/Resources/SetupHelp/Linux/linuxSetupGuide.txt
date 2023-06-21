@@ -1,0 +1,40 @@
+-----------USB setup----------------
+
+If you plan to connect to the ECU over USB (for example to run stateScript
+in standalone mode), we need to tell Ubuntu not to 'grab' the device when
+it is first plugged in. 
+
+This only needs to be set up once per machine.
+
+1) Open a terminal and run the following commands from the command line
+(replace /Path/to/Trodes with the actual path to your Trodes install):
+
+  cd /Path/to/Trodes/Resources/SetupHelp/Linux
+  sudo cp spikegadgets.rules /etc/udev/rules.d
+  sudo service udev restart
+
+2) Unplug and replug the USB cable connecting your ECU.
+
+You should now be able to start the stateScript module in standalone mode
+(by running ./stateScript); click the 'Controller' button, then select 'ECU'
+from the dropdown.
+
+—————Ethernet setup————————
+
+Go to ‘Ethernet’ connection settings and set MTU to 9000
+Go to the ‘IPv4 Settings’, set address: 192.168.0.2 (anything on this subnet between 2-254 is OK, trodes is .1)
+susdNetmask: 255.255.255.0
+Gateway: (leave empty, or use 0.0.0.0)
+
+Adjust the size of the write and receive buffers used by sockets (otherwise Trodes will drop packets, with an error about ‘Lost datapoints’).
+
+edit /etc/sysctl.conf (as root) and add the following lines:
+
+# (Trodes) Increase network buffer sizes
+net.core.rmem_max=8388607
+net.core.rmem_default=8388607
+net.core.wmem_max=8388607
+net.core.wmem_default=8388607
+
+
+=======

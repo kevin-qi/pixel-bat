@@ -1,0 +1,42 @@
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00001000 <- word 33 = optional override bit settings
+
+Bit 0: Wait-for-start override (no start signal needed for recording to start)
+Bit 1: Card-enable check override (recording will happen even if the card has not been enabled)
+Bit 2: Intan-check override (recording will happen even if the intan chip presense check failed)
+Bit 3: Magnatometer chip disable
+Bit 4: Accelerometer chip disable
+Bit 5: Gyro chip disable
+Bit 6: Smart reference enable
+Bit 7: 12-bit sample mode enable

@@ -1,0 +1,223 @@
+<?xml version="1.0"?>
+
+<Configuration>
+
+<GlobalConfiguration saveDisplayedChanOnly="1" filePath="/Users/karlssonm/datadump" filePrefix="test" realtimeMode="0"/>
+<StreamDisplay columns="4"/>
+    
+<HardwareConfiguration numChannels="1024" sampingRate="30000">
+    
+    <!--MCU I/O-->
+    <Device name="MCU_IO" packetOrderPreference="10" numBytes = "1" available="1">
+        <Channel id="MCU_Din1" dataType="digital" startByte="0" bit="0" />
+        <Channel id="MCU_Din2" dataType="digital" startByte="0" bit="1" />
+        <Channel id="MCU_Din3" dataType="digital" startByte="0" bit="2" />
+        <Channel id="MCU_Din4" dataType="digital" startByte="0" bit="3" />
+        <Channel id="MCU_Din5" dataType="digital" startByte="0" bit="4" />
+        <Channel id="MCU_Din6" dataType="digital" startByte="0" bit="5" />
+        <Channel id="MCU_Aux1" dataType="digital" startByte="0" bit="6" />
+        <Channel id="MCU_Aux2" dataType="digital" startByte="0" bit="7" />
+    </Device>
+    
+    
+    <!--ECU-->
+    <Device name="ECU" packetOrderPreference="20" numBytes = "32" available="1">
+        <Channel id="Din1" dataType="digital" startByte="0" bit="0" />
+        <Channel id="Din2" dataType="digital" startByte="0" bit="1" />
+        <Channel id="Din3" dataType="digital" startByte="0" bit="2" />
+        <Channel id="Din4" dataType="digital" startByte="0" bit="3" />
+        <Channel id="Din5" dataType="digital" startByte="0" bit="4" />
+        <Channel id="Din6" dataType="digital" startByte="0" bit="5" />
+        <Channel id="Din7" dataType="digital" startByte="0" bit="6" />
+        <Channel id="Din8" dataType="digital" startByte="0" bit="7" />
+        <Channel id="Din9" dataType="digital" startByte="1" bit="0" />
+        <Channel id="Din10" dataType="digital" startByte="1" bit="1" />
+        <Channel id="Din11" dataType="digital" startByte="1" bit="2" />
+        <Channel id="Din12" dataType="digital" startByte="1" bit="3" />
+        <Channel id="Din13" dataType="digital" startByte="1" bit="4" />
+        <Channel id="Din14" dataType="digital" startByte="1" bit="5" />
+        <Channel id="Din15" dataType="digital" startByte="1" bit="6" />
+        <Channel id="Din16" dataType="digital" startByte="1" bit="7" />
+        <Channel id="Din17" dataType="digital" startByte="2" bit="0" />
+        <Channel id="Din18" dataType="digital" startByte="2" bit="1" />
+        <Channel id="Din19" dataType="digital" startByte="2" bit="2" />
+        <Channel id="Din20" dataType="digital" startByte="2" bit="3" />
+        <Channel id="Din21" dataType="digital" startByte="2" bit="4" />
+        <Channel id="Din22" dataType="digital" startByte="2" bit="5" />
+        <Channel id="Din23" dataType="digital" startByte="2" bit="6" />
+        <Channel id="Din24" dataType="digital" startByte="2" bit="7" />
+        <Channel id="Din25" dataType="digital" startByte="2" bit="0" />
+        <Channel id="Din26" dataType="digital" startByte="3" bit="1" />
+        <Channel id="Din27" dataType="digital" startByte="3" bit="2" />
+        <Channel id="Din28" dataType="digital" startByte="3" bit="3" />
+        <Channel id="Din29" dataType="digital" startByte="3" bit="4" />
+        <Channel id="Din30" dataType="digital" startByte="3" bit="5" />
+        <Channel id="Din31" dataType="digital" startByte="3" bit="6" />
+        <Channel id="Din32" dataType="digital" startByte="3" bit="7" />
+        
+        <!--Digital out channels  -->
+        
+        <Channel id="Dout1" dataType="digital" startByte="4" bit="0" />
+        <Channel id="Dout2" dataType="digital" startByte="4" bit="1" />
+        <Channel id="Dout3" dataType="digital" startByte="4" bit="2" />
+        <Channel id="Dout4" dataType="digital" startByte="4" bit="3" />
+        <Channel id="Dout5" dataType="digital" startByte="4" bit="4" />
+        <Channel id="Dout6" dataType="digital" startByte="4" bit="5" />
+        <Channel id="Dout7" dataType="digital" startByte="4" bit="6" />
+        <Channel id="Dout8" dataType="digital" startByte="4" bit="7" />
+        <Channel id="Dout9" dataType="digital" startByte="5" bit="0" />
+        <Channel id="Dout10" dataType="digital" startByte="5" bit="1" />
+        <Channel id="Dout11" dataType="digital" startByte="5" bit="2" />
+        <Channel id="Dout12" dataType="digital" startByte="5" bit="3" />
+        <Channel id="Dout13" dataType="digital" startByte="5" bit="4" />
+        <Channel id="Dout14" dataType="digital" startByte="5" bit="5" />
+        <Channel id="Dout15" dataType="digital" startByte="5" bit="6" />
+        <Channel id="Dout16" dataType="digital" startByte="5" bit="7" />
+        <Channel id="Dout17" dataType="digital" startByte="6" bit="0" />
+        <Channel id="Dout18" dataType="digital" startByte="6" bit="1" />
+        <Channel id="Dout19" dataType="digital" startByte="6" bit="2" />
+        <Channel id="Dout20" dataType="digital" startByte="6" bit="3" />
+        <Channel id="Dout21" dataType="digital" startByte="6" bit="4" />
+        <Channel id="Dout22" dataType="digital" startByte="6" bit="5" />
+        <Channel id="Dout23" dataType="digital" startByte="6" bit="6" />
+        <Channel id="Dout24" dataType="digital" startByte="6" bit="7" />
+        <Channel id="Dout25" dataType="digital" startByte="6" bit="0" />
+        <Channel id="Dout26" dataType="digital" startByte="7" bit="1" />
+        <Channel id="Dout27" dataType="digital" startByte="7" bit="2" />
+        <Channel id="Dout28" dataType="digital" startByte="7" bit="3" />
+        <Channel id="Dout29" dataType="digital" startByte="7" bit="4" />
+        <Channel id="Dout30" dataType="digital" startByte="7" bit="5" />
+        <Channel id="Dout31" dataType="digital" startByte="7" bit="6" />
+        <Channel id="Dout32" dataType="digital" startByte="7" bit="7" />
+        
+        <!--Analog in channels  -->
+        
+        <Channel id="Ain1" dataType="analog" startByte="8" bit="0" />
+        <Channel id="Ain2" dataType="analog" startByte="10" bit="0" />
+        <Channel id="Ain3" dataType="analog" startByte="12" bit="0" />
+        <Channel id="Ain4" dataType="analog" startByte="14" bit="0" />
+        <Channel id="Ain5" dataType="analog" startByte="16" bit="0" />
+        <Channel id="Ain6" dataType="analog" startByte="18" bit="0" />
+        <Channel id="Ain7" dataType="analog" startByte="20" bit="0" />
+        <Channel id="Ain8" dataType="analog" startByte="22" bit="0" />
+        
+        <!--Analog out channels  -->
+        
+        <Channel id="Aout1" dataType="analog" startByte="24" bit="0" />
+        <Channel id="Aout2" dataType="analog" startByte="26" bit="0" />
+        <Channel id="Aout3" dataType="analog" startByte="28" bit="0" />
+        <Channel id="Aout4" dataType="analog" startByte="30" bit="0" />
+       </Device> 
+</HardwareConfiguration>
+
+ <!--Display auxilliary channels-->
+  <AuxDisplayConfiguration>
+      
+
+      <!--Digital in channels  -->
+      <DispChannel id="Din1" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din2" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din3" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din4" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din5" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din6" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din7" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din8" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din9" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din10" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din11" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din12" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din13" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din14" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din15" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din16" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      
+      <!--
+      <DispChannel id="Din17" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din18" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din19" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din20" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din21" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din22" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din23" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din24" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din25" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din26" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din27" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din28" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din29" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din30" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din31" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Din32" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       -->
+      
+      <!--Digital out channels  -->
+      
+      
+      <DispChannel id="Dout1" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout2" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout3" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout4" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout5" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout6" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout7" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout8" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout9" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout10" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout11" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout12" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout13" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout14" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout15" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      <DispChannel id="Dout16" device="ECU" maxDisp="2" color="#AAAAAA"/>
+      
+      
+       <!--
+       <DispChannel id="Dout17" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout18" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout19" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout20" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout21" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout22" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout23" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout24" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout25" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout26" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout27" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout28" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout29" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout30" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout31" device="ECU" maxDisp="2" color="#AAAAAA"/>
+       <DispChannel id="Dout32" device="ECU" maxDisp="2" color="#AAAAAA"/>
+        -->
+       
+      <!--Analog in channels  -->
+      
+      <DispChannel id="Ain1" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain2" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain3" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain4" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain5" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain6" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain7" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Ain8" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      
+      <!--Analog out channels  -->
+      
+      <!--
+      <DispChannel id="Aout1" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Aout2" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Aout3" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+      <DispChannel id="Aout4" device="ECU" maxDisp="2000" color="#AAFFAA"/>
+       -->
+
+  </AuxDisplayConfiguration>
+
+
+<!-- Spike configuration (NTrode setup)-->
+  <SpikeConfiguration autoPopulate="4">
+    
+  </SpikeConfiguration>
+
+
+</Configuration>

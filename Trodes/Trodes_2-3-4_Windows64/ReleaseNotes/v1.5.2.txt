@@ -1,0 +1,22 @@
+Release Notes for Trodes Suite version 1.5.2
+
+
+MAJOR FEATURES
+
+None
+
+
+MINOR CHANGES
+
+-Camera module now allows user to define which color LED is the ‘front’ using red-green position tracking.
+
+BUG FIXES
+
+None
+
+ 
+
+
+
+
+

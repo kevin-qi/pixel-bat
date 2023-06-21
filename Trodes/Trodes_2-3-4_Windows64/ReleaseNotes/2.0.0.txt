@@ -1,0 +1,23 @@
+2.0.0 Trodes Release Notes
+
+
+----Critical Bug Fixes----
+*DataLogger GUI has many fixes relating to data extraction and merging
+
+
+
+----Features----
+
+*A combined export utility was developed that is used to export multiple types a data at once
+
+*Trodes and the export utilities now use AVX2 to process data if it is available on the machine. This includes filtering, referencing, and spike waveform processing
+
+*An initial version of an API is introduced that allows users to gain access to the data in real time using either c++ or python. This API is based on the ZMQ library.
+
+*Neuropixels support, including an interface to select which channels are active 
+
+
+
+----Minor fixes and features----
+
+

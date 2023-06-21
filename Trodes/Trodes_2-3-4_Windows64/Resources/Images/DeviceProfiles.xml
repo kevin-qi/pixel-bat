@@ -1,0 +1,120 @@
+<Profile name="Controller_DIO">
+<Device numBytes="1" name="Controller_DIO" available="1" packetOrderPreference="10">
+    <Channel startByte="0" dataType="digital" bit="0" id="Controller_Din1"/>
+    <Channel startByte="0" dataType="digital" bit="1" id="Controller_Din2"/>
+    <Channel startByte="0" dataType="digital" bit="2" id="Controller_Din3"/>
+    <Channel startByte="0" dataType="digital" bit="3" id="Controller_Din4"/>
+    <Channel startByte="0" dataType="digital" bit="4" id="Controller_Din5"/>
+    <Channel startByte="0" dataType="digital" bit="5" id="Controller_Din6"/>
+    <Channel startByte="0" dataType="digital" bit="6" id="Controller_Din7"/>
+    <Channel startByte="0" dataType="digital" bit="7" id="Controller_Din8"/>
+</Device>
+</Profile>
+
+<Profile name="ECU">
+<Device numBytes="32" name="ECU" available="1" packetOrderPreference="20">
+    <Channel startByte="0" dataType="digital" bit="0" id="ECU_Din1"/>
+    <Channel startByte="0" dataType="digital" bit="1" id="ECU_Din2"/>
+    <Channel startByte="0" dataType="digital" bit="2" id="ECU_Din3"/>
+    <Channel startByte="0" dataType="digital" bit="3" id="ECU_Din4"/>
+    <Channel startByte="0" dataType="digital" bit="4" id="ECU_Din5"/>
+    <Channel startByte="0" dataType="digital" bit="5" id="ECU_Din6"/>
+    <Channel startByte="0" dataType="digital" bit="6" id="ECU_Din7"/>
+    <Channel startByte="0" dataType="digital" bit="7" id="ECU_Din8"/>
+    <Channel startByte="1" dataType="digital" bit="0" id="ECU_Din9"/>
+    <Channel startByte="1" dataType="digital" bit="1" id="ECU_Din10"/>
+    <Channel startByte="1" dataType="digital" bit="2" id="ECU_Din11"/>
+    <Channel startByte="1" dataType="digital" bit="3" id="ECU_Din12"/>
+    <Channel startByte="1" dataType="digital" bit="4" id="ECU_Din13"/>
+    <Channel startByte="1" dataType="digital" bit="5" id="ECU_Din14"/>
+    <Channel startByte="1" dataType="digital" bit="6" id="ECU_Din15"/>
+    <Channel startByte="1" dataType="digital" bit="7" id="ECU_Din16"/>
+    <Channel startByte="2" dataType="digital" bit="0" id="ECU_Din17"/>
+    <Channel startByte="2" dataType="digital" bit="1" id="ECU_Din18"/>
+    <Channel startByte="2" dataType="digital" bit="2" id="ECU_Din19"/>
+    <Channel startByte="2" dataType="digital" bit="3" id="ECU_Din20"/>
+    <Channel startByte="2" dataType="digital" bit="4" id="ECU_Din21"/>
+    <Channel startByte="2" dataType="digital" bit="5" id="ECU_Din22"/>
+    <Channel startByte="2" dataType="digital" bit="6" id="ECU_Din23"/>
+    <Channel startByte="2" dataType="digital" bit="7" id="ECU_Din24"/>
+    <Channel startByte="3" dataType="digital" bit="0" id="ECU_Din25"/>
+    <Channel startByte="3" dataType="digital" bit="1" id="ECU_Din26"/>
+    <Channel startByte="3" dataType="digital" bit="2" id="ECU_Din27"/>
+    <Channel startByte="3" dataType="digital" bit="3" id="ECU_Din28"/>
+    <Channel startByte="3" dataType="digital" bit="4" id="ECU_Din29"/>
+    <Channel startByte="3" dataType="digital" bit="5" id="ECU_Din30"/>
+    <Channel startByte="3" dataType="digital" bit="6" id="ECU_Din31"/>
+    <Channel startByte="3" dataType="digital" bit="7" id="ECU_Din32"/>
+    <Channel startByte="4" dataType="digital" bit="0" id="ECU_Dout1"/>
+    <Channel startByte="4" dataType="digital" bit="1" id="ECU_Dout2"/>
+    <Channel startByte="4" dataType="digital" bit="2" id="ECU_Dout3"/>
+    <Channel startByte="4" dataType="digital" bit="3" id="ECU_Dout4"/>
+    <Channel startByte="4" dataType="digital" bit="4" id="ECU_Dout5"/>
+    <Channel startByte="4" dataType="digital" bit="5" id="ECU_Dout6"/>
+    <Channel startByte="4" dataType="digital" bit="6" id="ECU_Dout7"/>
+    <Channel startByte="4" dataType="digital" bit="7" id="ECU_Dout8"/>
+    <Channel startByte="5" dataType="digital" bit="0" id="ECU_Dout9"/>
+    <Channel startByte="5" dataType="digital" bit="1" id="ECU_Dout10"/>
+    <Channel startByte="5" dataType="digital" bit="2" id="ECU_Dout11"/>
+    <Channel startByte="5" dataType="digital" bit="3" id="ECU_Dout12"/>
+    <Channel startByte="5" dataType="digital" bit="4" id="ECU_Dout13"/>
+    <Channel startByte="5" dataType="digital" bit="5" id="ECU_Dout14"/>
+    <Channel startByte="5" dataType="digital" bit="6" id="ECU_Dout15"/>
+    <Channel startByte="5" dataType="digital" bit="7" id="ECU_Dout16"/>
+    <Channel startByte="6" dataType="digital" bit="0" id="ECU_Dout17"/>
+    <Channel startByte="6" dataType="digital" bit="1" id="ECU_Dout18"/>
+    <Channel startByte="6" dataType="digital" bit="2" id="ECU_Dout19"/>
+    <Channel startByte="6" dataType="digital" bit="3" id="ECU_Dout20"/>
+    <Channel startByte="6" dataType="digital" bit="4" id="ECU_Dout21"/>
+    <Channel startByte="6" dataType="digital" bit="5" id="ECU_Dout22"/>
+    <Channel startByte="6" dataType="digital" bit="6" id="ECU_Dout23"/>
+    <Channel startByte="6" dataType="digital" bit="7" id="ECU_Dout24"/>
+    <Channel startByte="6" dataType="digital" bit="0" id="ECU_Dout25"/>
+    <Channel startByte="7" dataType="digital" bit="1" id="ECU_Dout26"/>
+    <Channel startByte="7" dataType="digital" bit="2" id="ECU_Dout27"/>
+    <Channel startByte="7" dataType="digital" bit="3" id="ECU_Dout28"/>
+    <Channel startByte="7" dataType="digital" bit="4" id="ECU_Dout29"/>
+    <Channel startByte="7" dataType="digital" bit="5" id="ECU_Dout30"/>
+    <Channel startByte="7" dataType="digital" bit="6" id="ECU_Dout31"/>
+    <Channel startByte="7" dataType="digital" bit="7" id="ECU_Dout32"/>
+    <Channel startByte="8" dataType="analog" bit="0" id="ECU_Ain1"/>
+    <Channel startByte="10" dataType="analog" bit="0" id="ECU_Ain2"/>
+    <Channel startByte="12" dataType="analog" bit="0" id="ECU_Ain3"/>
+    <Channel startByte="14" dataType="analog" bit="0" id="ECU_Ain4"/>
+    <Channel startByte="16" dataType="analog" bit="0" id="ECU_Ain5"/>
+    <Channel startByte="18" dataType="analog" bit="0" id="ECU_Ain6"/>
+    <Channel startByte="20" dataType="analog" bit="0" id="ECU_Ain7"/>
+    <Channel startByte="22" dataType="analog" bit="0" id="ECU_Ain8"/>
+    <Channel startByte="24" dataType="analog" bit="0" id="ECU_Aout1"/>
+    <Channel startByte="26" dataType="analog" bit="0" id="ECU_Aout2"/>
+    <Channel startByte="28" dataType="analog" bit="0" id="ECU_Aout3"/>
+    <Channel startByte="30" dataType="analog" bit="0" id="ECU_Aout4"/>
+</Device>
+</Profile>
+
+<Profile name="SysClock">
+<Device name= "SysClock" packetOrderPreference="10000" numBytes="8" available="1">
+</Device>
+</Profile>
+
+
+<Profile name="Multiplexed_IO">
+<Device numBytes="8" name="Multiplexed" packetOrderPreference="30" available="1">
+   <Channel dataType="analog" input="1" interleavedDataIDBit="3" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_AccelX"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="3" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_AccelY"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="3" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_AccelZ"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="2" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_GyroX"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="2" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_GyroY"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="2" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_GyroZ"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="1" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_MagX"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="1" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_MagY"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="1" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_MagZ"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="0" bit="0" interleavedDataIDByte="0" startByte="2" id="RFsync"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="4" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_Ack1"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="4" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_Ack2"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="4" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_Ack3"/>
+   <Channel dataType="analog" interleavedDataIDByte="0" interleavedDataIDBit="5" startByte="2" bit="0" input="1" id="Controller_Ain1"/>
+  </Device>
+</Profile>
+
+

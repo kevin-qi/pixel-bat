@@ -1,0 +1,21 @@
+Release Notes for Trodes Suite version 1.4.1
+
+
+MAJOR FEATURES
+
+
+
+
+
+MINOR FEATURES
+
+
+**cameraModule:
+	- Added debugging tool which prints all function calls as specific IDs in console output (set DEBUG_MODE define to 1 in videoDisplay.h)
+
+BUG FIXES
+
+**Export code can now keep going if an erroneous backwards timestamp is detected with -abortbaddata 0 flag
+
+**cameraModule: 
+	- Fixed an issue where cameraModule would try to track linear position on a rangeLine and cause a crash.

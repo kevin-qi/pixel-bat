@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<Configuration>
+ <GlobalConfiguration realtimeMode="0" filePath="" filePrefix="myAnimal" saveDisplayedChanOnly="1"/>
+ <HardwareConfiguration numChannels="32" samplingRate="30000">
+  <Device name="MCU_IO" packetOrderPreference="10" numBytes="1" available="1">
+   <Channel id="MCU_Din1" dataType="digital" bit="0" startByte="0"/>
+   <Channel id="MCU_Din2" dataType="digital" bit="1" startByte="0"/>
+   <Channel id="MCU_Din3" dataType="digital" bit="2" startByte="0"/>
+   <Channel id="MCU_Din4" dataType="digital" bit="3" startByte="0"/>
+   <Channel id="MCU_Din5" dataType="digital" bit="4" startByte="0"/>
+   <Channel id="MCU_Din6" dataType="digital" bit="5" startByte="0"/>
+  </Device>
+ </HardwareConfiguration>
+ 
+ <StreamDisplay columns="2" backgroundColor="#808080"/>
+ <AuxDisplayConfiguration>
+  <DispChannel id="MCU_Din1" device="MCU_IO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="MCU_Din2" device="MCU_IO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="MCU_Din3" device="MCU_IO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="MCU_Din4" device="MCU_IO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="MCU_Din5" device="MCU_IO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="MCU_Din6" device="MCU_IO" maxDisp="2" color="#aaaaaa"/>
+ </AuxDisplayConfiguration>
+ <SpikeConfiguration>
+  
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="1" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="0" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="2" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="1" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="3" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="2" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="4" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="3" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="5" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="4" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="6" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="5" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="7" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="6" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="8" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="7" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="9" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="8" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="10" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="9" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="11" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="10" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="12" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="11" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="13" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="12" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="14" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="13" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="15" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="14" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="16" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="15" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="17" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="16" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="18" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="17" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="19" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="18" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="20" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="19" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="21" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="20" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="22" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="21" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="23" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="22" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="24" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="23" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="25" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="24" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="26" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="25" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="27" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="26" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="28" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="27" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="29" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fafafa">
+   <SpikeChannel hwChan="28" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="30" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#fa3232">
+   <SpikeChannel hwChan="29" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="31" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#14fa14">
+   <SpikeChannel hwChan="30" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+  <SpikeNTrode highFilter="6000" moduleDataChan="1" id="32" filterOn="1" refChan="1" refOn="0" moduleDataHighFilter="200" refNTrode="1" moduleDataOn="0" lowFilter="600" color="#1414fa">
+   <SpikeChannel hwChan="31" triggerOn="1" thresh="60" maxDisp="400"/>
+  </SpikeNTrode>
+ </SpikeConfiguration>
+</Configuration>

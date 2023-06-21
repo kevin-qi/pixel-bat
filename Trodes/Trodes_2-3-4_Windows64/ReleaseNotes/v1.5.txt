@@ -1,0 +1,46 @@
+Release Notes for Trodes Suite version 1.5
+
+
+MAJOR FEATURES
+
+-Added Multi-Plot PETH functionality in spikes window. Users now have the option of seeing a histogram of all spike data points as well as histograms of individual, user-defined cluster plots at the same time. Clicking on specific cluster plots will open a PSTH window containing more specific data bout that cluster. Further, switching to a different nTrode will update the histogram window automatically.
+
+-Automated testing system, specifically with regard to command line testing. These tests currently exist: a workspaces test (opens all workspaces and closes them among a set), a file playback test (opens all files in directory and checks to make sure all threads are syncing properly), a hardware connection test (tries communicating with a hardware setup), and a hardware streaming test to make sure data can be streamed from the hardware.
+
+-Benchmarking GUI. Basically a settings control panel available in the main Trodes program, the Benchmarking GUI allows the user to edit benchmarking settings at runtime. Along with turning specific benchmarking tests on/off, the user can edit the frequency with which benchmarking statements are being printed (this is to prevent console clogging). These benchmarking settings can now also be saved and loaded via workspace files.
+
+-Version information (compile date/time, git commit compiled, Trodes version info) can now be displayed from all modules in their ‘About’ tabs. This information is also saved in recordings and exported using the export utilities.
+
+—Linux build system now automatically packages all required files into final build folder. All modules are compiled alongside Trodes main in all OS’s using Trodes_all.pro.
+
+-Event system.  Events can now be defined and recieved by other modules for user-defined behavior.  Current events include spikes from defined units and zone enter/exit events from the camera module.
+
+
+
+MINOR CHANGES
+
+-Warnings are now thrown when opening Trodes if a separate instance of Trodes is detected to be running with an open workspace and Trodes will prevent itself from opening a workspace if this is the case to prevent networking issues.
+
+-Trodes debug .txt logs are now automatically created in a folder directly adjacent to the Trodes executable, for windows/linux this is the same location as the binary/exe, and for mac the .app folder.
+
+
+
+BUG FIXES
+
+-Debug messages from modules now forwarded correctly to Trodes main on Windows
+
+-Camera module auto gain behavior removed for GigE cameras
+
+-Switching between two GigE cameras is now more robust to failed connections
+
+-Switching from either of the signal generator sources no longer causes the next source to crash the system
+
+-Rhythm source turned off by default to prevent crash when selected
+
+-Improved button behavior and appearance across OS’s
+ 
+
+
+
+
+

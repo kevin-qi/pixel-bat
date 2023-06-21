@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<Configuration>
+
+<GlobalConfiguration saveDisplayedChanOnly="1" filePath="/Users/karlssonm/datadump" filePrefix="test" realtimeMode="0"/>
+<StreamDisplay columns="4"/>
+    
+<HardwareConfiguration numChannels="256" sampingRate="30000">
+    
+    <!--MCU I/O-->
+    <Device name="MCU_IO" packetOrderPreference="10" numBytes = "1" available="1">
+        <Channel id="MCU_Din1" dataType="digital" startByte="0" bit="0" />
+        <Channel id="MCU_Din2" dataType="digital" startByte="0" bit="1" />
+        <Channel id="MCU_Din3" dataType="digital" startByte="0" bit="2" />
+        <Channel id="MCU_Din4" dataType="digital" startByte="0" bit="3" />
+        <Channel id="MCU_Din5" dataType="digital" startByte="0" bit="4" />
+        <Channel id="MCU_Din6" dataType="digital" startByte="0" bit="5" />
+        <Channel id="MCU_Aux1" dataType="digital" startByte="0" bit="6" />
+        <Channel id="MCU_Aux2" dataType="digital" startByte="0" bit="7" />
+    </Device>
+    
+    
+    
+    
+</HardwareConfiguration>
+
+
+
+<!-- Spike configuration (NTrode setup)-->
+  <SpikeConfiguration autoPopulate="1">
+    
+  </SpikeConfiguration>
+
+
+</Configuration>

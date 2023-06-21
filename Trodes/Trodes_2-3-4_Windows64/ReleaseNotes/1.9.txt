@@ -1,0 +1,22 @@
+1.9 Trodes Release Notes
+
+1.9 Major Features
+
+- Data Logger GUI: Updated with a better, more streamlined interface.
+    Works with new Dock for faster data extractions, charging station, and streaming.
+
+- RF connected device panel: Our new Dock streams DIO/analog like an MCU, and can also
+    connect to a data logger wirelessly! When connected in Trodes, an RF panel shows up
+    that displays details about the connected data logger, including # of channels, SD
+    capacity, battery remaining, and more.
+
+- RMS plot: Plots root-mean-sq of each hardware channel. Useful for noise debugging
+
+- Power spectral density plot: Density plot of frequencies of a selected ntrode's signal. Useful for noise debugging.
+
+- Allied Vision cameras: Using Bayer8 image format (can be set in their VimbaViewer software),
+    your video frame rate can improve by as much as 2x, because CameraModule now supports Bayer8
+    to normal RGB24 conversion.
+        - Thanks to Tom and Abhilasha from the Frank Lab!
+
+- Updated internal streaming and processing code to be more efficient

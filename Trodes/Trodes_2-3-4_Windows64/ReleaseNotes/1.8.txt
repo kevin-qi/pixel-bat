@@ -1,0 +1,38 @@
+1.8._ Release notes for Trodes software suite
+
+1.8 Major Features (see http://www.spikegadgets.com/software/releasenotes_1_8.html for more details)
+- Auto-connect that can generate workspaces based on connected hardware
+
+- Common Average Referencing
+
+- PTP for AVT cameras
+
+- System clock in recordings, saved in each packet
+
+- Data Logger GUI
+
+- Export GUI
+
+- Installer and updater tools
+
+Bug fixes (1.8.0 - 1.8.1)
+- [1.8.1] Moved create/edit/remove of CAR groups to workspace editor
+
+- [1.8.1] Renamed quickstart to auto-connect
+
+- [1.8.1] Version checking and online updater works and can be properly launched from Trodes
+
+- [1.8.1] Changed names of certain hardware devices to more intuitive names
+
+- [1.8.1] For wireless logger users: Added specific .trodesconf workspaces for datalogging to SampleWorkspaces/Logger_workspaces
+
+- [1.8.1] System clock bug fixes:
+                - export programs can properly deal with sysclock
+                - workspaces with sysclock display DIO data properly
+
+- [1.8.1] Improved tooltips in ntrode settings dialog
+
+- [1.8.1] Statescript does simple check if observer language executable is valid
+
+- [1.8.1] Group referencing is included in export code
+

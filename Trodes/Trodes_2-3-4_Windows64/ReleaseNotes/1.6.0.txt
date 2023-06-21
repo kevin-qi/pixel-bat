@@ -1,0 +1,69 @@
+Release Notes for Trodes Suite version 1.6.0
+
+
+MAJOR FEATURES
+
+—Multi waveform plotting.  The spike waveform viewer can not display many spikes at once and color them according to sorted spikes.  
+
+—Workspace editor interface.  Workspaces can now be generated and edited using a graphical interface.  This eliminates the need to know XML to create or edit workspaces.
+
+—File playback improvements.  File playback mode now uses a slider bar to allow the user to skip to any part of the file.  The camera module will open the accompanying video (if it exists) and synchronize playback with neural data.
+
+—Intro menu.  Upon startup, Trodes now displays a menu allowing the user to quickly access previously used workspaces or recordings.
+
+—Headstage settings dialog.  Users can now change headstage settings such as auto settle, smart referencing, and motion sensor on/off states from Trodes.
+
+—Improved recording status indicator. Previously, when a file was opened for recording, some users had the assumption that it meant recording had started, because there was no obvious indicator. Now, indicators have been added to make it clear to the user if recording is currently on or not. We added text that states the number of hours and minutes recorded so far, a long status bar that changes color and reads either "Recording Paused" or "Recording Active”, and on the camera module, the file opened and time recorded is displayed at the top of the window
+
+
+
+
+MINOR CHANGES
+
+—Freeze display.  The user can now freeze the continuous stream display by either pushing the Freeze Display button, using the menu, or pressing the space bar.
+
+—Hardware serial number and version display. This information is also appended to recordings.
+
+—StateScript GUI improvements.  Macro buttons can be configured to enter StateScript commands to toggle DIO pins, etc. Also, there is improved labeling of the different panels. 
+
+—Version update lookup.  Trodes will automatically lookup if a newer version is available.  In the intro menu, the ‘Information’ box will alert the user if a new version is available for download.
+
+—Camera module export additions.  The camera module will now export linear track geometries, zone geometries, and scale info (cm per pixel).  It will also export linearized position if a linear geometry was enabled during tracking.
+
+—If settings are changed to any nTrodes after a recording file is opened, the program will prompt the user to save an updated workspace alongside the recording (since the header at the top of the recording only captures the initial state).
+
+-Multiple PETH windows open.  The user can open separate PETH windows for multiple nTrodes, which will automatically update when new events occur.
+
+—Spike waveform alignment.  Spikes are now automatically aligned to the peak. This applies both the Trodes and the exportspikes program.
+
+—Audio Off command line argument to disable audio.  On some machine, auto driver incompatibilities can cause crashes, so this was implemented to diagnose audio issues.
+
+—For two-diode tracking in camera module, users can set if the red diode or the green diode is in the front.
+
+ 
+
+CRITICAL BUG FIXES
+
+None
+
+
+
+MINOR BUG FIXES
+
+—Python data extraction program fixed
+
+—mergeSDRecording had incorrect error outputs that were removed
+
+—Fixed the number of displayed columns to match what is in the workspace.
+
+—Digital reference nTrodes are referenced by their in the workspace ID number rather than their index 
+
+ 
+
+
+ 
+
+
+
+
+

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<Configuration>
+ <GlobalConfiguration saveDisplayedChanOnly="1" realtimeMode="0" filePrefix="myAnimal" filePath=""/>
+ <HardwareConfiguration numChannels="0" samplingRate="30000">
+  <Device numBytes="1" name="MCU_IO" available="1" packetOrderPreference="10">
+   <Channel startByte="0" dataType="digital" bit="0" id="MCU_Din1"/>
+   <Channel startByte="0" dataType="digital" bit="1" id="MCU_Din2"/>
+   <Channel startByte="0" dataType="digital" bit="2" id="MCU_Din3"/>
+   <Channel startByte="0" dataType="digital" bit="3" id="MCU_Din4"/>
+   <Channel startByte="0" dataType="digital" bit="4" id="MCU_Din5"/>
+   <Channel startByte="0" dataType="digital" bit="5" id="MCU_Din6"/>
+   <Channel startByte="0" dataType="digital" bit="6" id="MCU_Aux1"/>
+   <Channel startByte="0" dataType="digital" bit="7" id="MCU_Aux2"/>
+</Device>
+<Device numBytes="4" name="RF" available="1" packetOrderPreference="30">
+	<Channel startByte="0" dataType="uint32" bit="0" id="RFsync"/>
+</Device>
+
+
+ </HardwareConfiguration>
+  <StreamDisplay columns="4" backgroundColor="#030303"/>
+ <AuxDisplayConfiguration>
+  <DispChannel maxDisp="2" color="#aaaaaa" device="MCU_IO" id="MCU_Din1"/>
+  <DispChannel maxDisp="2" color="#aaaaaa" device="MCU_IO" id="MCU_Din2"/>
+  <DispChannel maxDisp="2" color="#aaaaaa" device="MCU_IO" id="MCU_Din3"/>
+  <DispChannel maxDisp="2" color="#aaaaaa" device="MCU_IO" id="MCU_Din4"/>
+  <DispChannel maxDisp="2" color="#aaaaaa" device="MCU_IO" id="MCU_Din5"/>
+  <DispChannel maxDisp="2" color="#aaaaaa" device="MCU_IO" id="MCU_Din6"/>
+   </AuxDisplayConfiguration>
+ 
+</Configuration>

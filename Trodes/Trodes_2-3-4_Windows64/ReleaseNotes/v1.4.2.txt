@@ -1,0 +1,55 @@
+Release Notes for Trodes Suite version 1.4.2
+
+
+MAJOR FEATURES
+
+** StateScript GUI now has a separate input widget to type commands to hardware. Users can use the up and down arrows to scroll through command history.
+
+** Event System Added
+  - Implemented an event system in Trodes server-client architecture that allows modules to dynamically create and send event messages to all other modules.
+  - Added EventHandler class implementing a GUI menu allowing users to create connections between events and module actions. (e.g. when an event is received, all actions/methods linked to the event will be executed)
+    - This class is highly portable and can easily be added to any module. (see documentation on the Trodes Wiki)
+
+** CameraModule 
+  - Position data streaming greatly expanded, the following data is now being streamed:
+    - Linear position data (continuous)
+    - Linear track data whenever it is created/edited/moved in a relative scale (0-1) format. (Non-Continuous)
+    - Velocity data received from embedded Python. (Continuous)
+    - See documentation on the Trodes wiki for specific format information
+  - A compatibility mode was added that will either enable, or disable the changes to  position data streaming (modules that rely on the previous position data format will not be broken by this update).  
+
+** Added new module: SimpleCommunicator
+  - SimpleCommunicator is a heavily modified version of SimpleMonitor
+which should be used as an example for how to set up a module to
+request and receive data from other modules. (It should go hand-in-hand with the wiki for documentation purposes)
+  - SimpleCommunicator currently supports full communication with Trodes and
+CameraModule. (Notably, SimpleCommunicator will display CameraModule’s
+real time position data)
+  - SimpleCommunicator contains a fully implemented EventHandler.
+
+
+MINOR FEATURES
+
+** On Linux:
+  - All executables can now be called directly. (I.e you can run Trodes, instead of Trodes.sh) The shell scripts have been removed.
+
+** OfflineSorter exporter added to export programs
+
+** Trodes
+  - Added event system support to Trodes main module (it can now send events to other modules)
+  - Added events to Trodes which track when spikes occur in user defied clusters in different NTrodes. These events are created when a new polygon is created in the ‘spike’ dialog menu.
+
+** CameraModule
+  - Several event definitions added at module startup (e.g. Zone created, linearization tract created) that can be seen by other modules.
+  - Events added that tell the user when specific zones have been entered and exited by tracked objects.
+  - Zones will now turn blue when entered by tracked objects and revert to clear when left.
+  - Added UI element in Camera Module that brings up an eventHandler menu.
+  - Added a plotLocation method action visible in the event connection menu that plots a point on the currently tracked position 
+
+
+BUG FIXES
+
+** CameraModule
+  - Fixed an issue that would cause a crash if the user tried to create a linear track while tracking was enabled.
+  - Fixed an issue that would cause a crash when double clicking the first node while drawing with either the Linear Track tool or the Range Line tool.
+  - Fixed a bug in the load geometry code which would append a bad node onto the end of loaded linear geometry.
