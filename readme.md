@@ -1,5 +1,7 @@
 # PixelBat
 
+## Installation
+
 ## Usage
 #### Trodes Data Extraction
 
@@ -15,5 +17,5 @@
 	- Check that matlab console shows no errors.
 	- Click `Run All`
 3. Kilosort diagnostics
-	- Drift should be <20 um at most. Ideally <5 um.
+	- Drift should be <20 um at most. 
 5. 
