@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<Configuration>
+ <GlobalConfiguration realtimeMode="0" filePath="" filePrefix="" saveDisplayedChanOnly="1"/>
+ <HardwareConfiguration numChannels="32" samplingRate="30000">
+  <Device name="Controller_DIO" packetOrderPreference="10" numBytes="1" available="1">
+   <Channel id="Controller_Din1" dataType="digital" bit="0" startByte="0"/>
+   <Channel id="Controller_Din2" dataType="digital" bit="1" startByte="0"/>
+   <Channel id="Controller_Din3" dataType="digital" bit="2" startByte="0"/>
+   <Channel id="Controller_Din4" dataType="digital" bit="3" startByte="0"/>
+   <Channel id="Controller_Din5" dataType="digital" bit="4" startByte="0"/>
+   <Channel id="Controller_Din6" dataType="digital" bit="5" startByte="0"/>
+   <Channel id="Controller_Din7" dataType="digital" bit="6" startByte="0"/>
+   <Channel id="Controller_Din8" dataType="digital" bit="7" startByte="0"/>
+  </Device>
+  <Device name= "SysClock" packetOrderPreference="10000" numBytes="8" available="1">
+  </Device>
+  <Device numBytes="8" name="Multiplexed" packetOrderPreference="30" available="1">
+   <Channel dataType="analog" input="1" interleavedDataIDBit="3" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_AccelX"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="3" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_AccelY"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="3" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_AccelZ"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="2" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_GyroX"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="2" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_GyroY"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="2" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_GyroZ"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="1" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_MagX"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="1" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_MagY"/>
+   <Channel dataType="analog" input="1" interleavedDataIDBit="1" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_MagZ"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="0" bit="0" interleavedDataIDByte="0" startByte="2" id="RFsync"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="4" bit="0" interleavedDataIDByte="0" startByte="2" id="Headstage_Ack1"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="4" bit="0" interleavedDataIDByte="0" startByte="4" id="Headstage_Ack2"/>
+   <Channel dataType="uint32" input="1" interleavedDataIDBit="4" bit="0" interleavedDataIDByte="0" startByte="6" id="Headstage_Ack3"/>
+   <Channel dataType="analog" interleavedDataIDByte="0" interleavedDataIDBit="5" startByte="2" bit="0" input="1" id="Controller_Ain1"/>
+  </Device>
+
+ </HardwareConfiguration>
+
+ <StreamDisplay columns="2" backgroundColor="#404040"/>
+ <AuxDisplayConfiguration>
+  <DispChannel id="Controller_Din1" device="Controller_DIO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="Controller_Din2" device="Controller_DIO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="Controller_Din3" device="Controller_DIO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="Controller_Din4" device="Controller_DIO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="Controller_Din5" device="Controller_DIO" maxDisp="2" color="#aaaaaa"/>
+  <DispChannel id="Controller_Din6" device="Controller_DIO" maxDisp="2" color="#aaaaaa"/>
+ </AuxDisplayConfiguration>
+ <SpikeConfiguration categories="">
+  <SpikeNTrode moduleDataOn="1" LFPHighFilter="200" lowFilter="600" color="#ffffff" refNTrodeID="1" refChan="1" highFilter="6000" filterOn="1" refGroup="0" LFPChan="1" lfpFilterOn="1" id="1" groupRefOn="0" refOn="0" lfpRefOn="0">
+   <SpikeChannel hwChan="0" maxDisp="200" triggerOn="1" thresh="30"/>
+  </SpikeNTrode>
+  </SpikeConfiguration> 
+ 
+</Configuration>

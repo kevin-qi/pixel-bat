@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/buttons">
+        <file>arrow.png</file>
+        <file>hand.png</file>
+        <file>pauseImage.png</file>
+        <file>playImage.png</file>
+        <file>polygon.png</file>
+        <file>recordImage.png</file>
+        <file>speaker.png</file>
+        <file>cable.png</file>
+        <file>new-file.png</file>
+        <file>cable2.png</file>
+    </qresource>
+    <qresource prefix="/icons"/>
+    <qresource prefix="/">
+        <file>trodesIcon.png</file>
+        <file>error.png</file>
+        <file>DeviceProfiles.xml</file>
+    </qresource>
+</RCC>

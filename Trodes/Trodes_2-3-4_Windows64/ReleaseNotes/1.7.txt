@@ -1,0 +1,66 @@
+Release Notes for Trodes Suite version 1.7
+
+Major Features
+
+- NTrode selection and settings: Multiple ntrodes can now be selected, by using typical conventions with SHIFT or CTRL and clicking on multiple ntrodes. The ntrode button now creates an ntrode settings panel which applies the changes to all ntrodes selected. 
+
+- Categories and tags for ntrodes: Ntrodes can be assigned categories and tags in the settings panel. Categories can have any number of tags. Any ntrode can be labeled with a category-tag combination. They are stored in the config file. The categories and tags can also be used to filter and select ntrodes. 
+
+- Spike display: Unclustered points and waveforms can now be hidden. This is useful when clusters are created and the user wants to hide unclustered points. Both the scatterplot and waveforms plot support this. Individual clusters can also be shown or hidden at the menu from a right-click on a cluster. 
+
+- Stream display: The user can decide to view a spike stream, LFP stream, or raw unfiltered stream. The LFP stream only displays the designated channel. The filters are separate from the stream display, so the user can view the LFP stream while still enabling the spike filter. 
+
+- Hardware disconnects: if the hardware briefly disconnects, the system will automatically attempt to reconnect. There is also now an indicator for hardware status. 
+
+- Moved to Qt5.9: Qt has fixed several of their own bugs and improved features over their releases. We are moving from 5.5.1 to 5.9.1. 
+
+- [1.7.3 and 1.7.5]: Preferences panel added, two options:
+    - create new folder for recording
+    - invert spikes display
+
+Bug fixes from 1.7.0-1.7.5
+- [1.7.5] Spikes replacement algorithm in spikedisplay is back to FIFO
+
+- [1.7.5] Interpolation added to exportOfflineSorter
+
+- [1.7.5] SystemTimestamp bug on Windows 32bit
+
+- [1.7.5] CameraModule linear geometry loading bug fix
+
+- [1.7.5] Fastplayback: instead of processing images at a fixed speed, processes next frame immediately after the previous one is finished.
+    This way, memory buildup is prevented when processing went too fast for broad tracking parameters
+
+- [1.7.5] splitrec and mergeSDRecording have a solution when rec and sd files have different sampling rates
+
+
+- [1.7.4] Slight improvement on recording data with an edge case config file
+
+- [1.7.4] Sending referenced data to modules was fixed
+
+- [1.7.4] Minor issues with error indicator in Trodes
+
+- [1.7.3] Changing settings all at once was slow and caused UI to freeze
+
+- [1.7.3] Better corrupted packets checking
+
+- [1.7.3] Python export script split into 2: one for Python2 and one for Python3
+
+- [1.7.3] Memory leak fix in cameramodule when opening a second file
+
+- [1.7.2] Critical bug fix in export spikes.
+
+- [1.7.2] Opening a file on cameraModule on a different machine will result in creating a folder for the recording in the cameraModule's directory
+
+- [1.7.2] Switching cameras is now more stable and does not result in random crashes
+
+- [1.7.2] Monitor switching should no longer cause crashes, was reintroduced by new Qt version 5.9
+
+- [1.7.1] Fixed GUI on cameramodule that was ambiguous and did not prevent user error
+
+- [1.7.1] LFP and unfiltered data polarity was mistakenly reversed. They are now normal. Spike polarity is kept as reversed.
+
+- Fixed disconnect fault tolerence with USB connection
+
+- Export functions bugs and settings fixes
+
+- Build script fixed on Linux

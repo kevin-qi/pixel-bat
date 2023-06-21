@@ -1,0 +1,29 @@
+1.9.1 Trodes Release Notes
+
+
+----Critical Bug Fixes----
+* nTrode menu was not updating correctly as the user clicked on a new nTrode. This issue was introduced in 1.9.0
+
+*Audio was not updating properly with CAR referencing changes.
+
+*exportLFP was scrambling the channels id's in the output. This issue was introduced in 1.9.0
+
+*Fixed a crash condition in splitRec
+
+
+
+----Features----
+
+*Two new export functions were added: exportraw and exportspikeband. These are used to export continuous data from either the raw data band or the spike data band. 
+
+*CAR groups can now be added from the main Trodes window.
+
+
+
+
+----Minor fixes and features----
+
+*Workspace editor was overwriting the nTrode colors. This is now fixed.
+
+*Improved export program help menu
+

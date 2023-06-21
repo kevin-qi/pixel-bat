@@ -1,0 +1,27 @@
+Release Notes for Trodes Suite version 1.5.1
+
+
+MAJOR FEATURES
+
+None
+
+
+MINOR CHANGES
+
+-Camera module now does not allow switching cameras once a recording file has been created. File must be closed before the camera can be switched again.
+
+
+BUG FIXES
+
+-Fixed minor memory leak from PETH windows
+
+-Fixed Camera module time rate being recorded as 0 instead of 30000 
+
+-Fixed bug causing StateScript GUI to crash when in standalone mode and opening the camera module
+
+ 
+
+
+
+
+
