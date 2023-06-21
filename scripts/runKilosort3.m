@@ -8,7 +8,7 @@ rootPath = fileparts(selfPath); % This should be root path of pixel-bat
 
 addpath(genpath(fullfile(rootPath, 'Kilosort3'))) % path to kilosort folder
 addpath(fullfile(rootPath, 'utils\npy-matlab')) % for converting to Phy
-pathToYourConfigFile = fullfile(rootPath, 'KilosortConfig\BatFlightConfig.m'); % Kilosort hyperparameters
+pathToYourConfigFile = fullfile(rootPath, 'Kilosort3Config\BatFlightConfig.m'); % Kilosort hyperparameters
 pathToYourConfigFile = char(pathToYourConfigFile);
 
 path_to_recording_dir = char(path_to_recording_dir);
