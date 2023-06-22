@@ -6,13 +6,14 @@ function [] = exportTrodesRecording(path_to_rec_dir, path_to_trodes, varargin)
 p = inputParser;
 addRequired(p,'path_to_rec_dir');
 addRequired(p,'path_to_trodes');
-addOptional(p,'isTethered',false);
-addOptional(p,'extractLFP',1);
+
+addOptional(p,'isTethered',0); % 0 for wireless recording
+addOptional(p,'extractLFP',1); % 1 to extract, 0 to skip
 addOptional(p,'extractAnalog',1);
 addOptional(p,'extractKilosort',1);
 addOptional(p,'extractTime',1);
 addOptional(p,'extractDIO',1);
-addOptional(p,'extractSpikes',1);
+addOptional(p,'extractSpikes',0);
 addOptional(p,'extractSpikeBand',0);
 addOptional(p,'extractRaw',0);
 addOptional(p,'lfpLowPass', 500);
@@ -32,15 +33,17 @@ extractRaw = p.Results.extractRaw;
 lfpLowPass = p.Results.lfpLowPass;
 spikesFreqBand = p.Results.spikesFreqBand;
 
+fprintf("Extracting data from %s \n\n", path_to_rec_dir);
+
 %% Select appropriate flags for extraction
-possible_flags = ["-lfp", "-analogio", "-kilosort", "-dio", "-spikes", "-spikeband", "-time", "-raw"]
-flags = possible_flags(logical([extractLFP extractAnalog extractKilosort extractDIO extractSpikes extractSpikeBand extractTime extractRaw]))
+possible_flags = ["-lfp", "-analogio", "-kilosort", "-dio", "-spikes", "-spikeband", "-time", "-raw"];
+flags = possible_flags(logical([extractLFP extractAnalog extractKilosort extractDIO extractSpikes extractSpikeBand extractTime extractRaw]));
 cmd_flags = join(flags);
 
 lfp_options = sprintf("-lfplowpass %d -lfpoutputrate 1500 -uselfpfilters 1", lfpLowPass); % LFP export parameters
 spikeband_options = sprintf("-spikehighpass %d -spikelowpass %d -usespikefilters 1", spikesFreqBand(1), spikesFreqBand(2)); % spikes export parameters
 
-cmd_flags = join([cmd_flags lfp_options spikeband_options])
+cmd_flags = join([cmd_flags lfp_options spikeband_options]);
 
 %% Path to Trodes is needed to call the trodes function.
 addpath(genpath(path_to_trodes))
@@ -70,8 +73,11 @@ if(exist(path_to_rec_file))
     output_path = join(['"', path_to_rec_dir, '"'], '');
     
     cmd = join(['trodesexport', cmd_flags, '-rec', formatted_path_to_rec_file, '-outputdirectory', output_path, '-interp 0']); % command to run
-    [status, cmdout] = system(cmd); % Export lfp file
     
+    disp(cmd)
+    [status, cmdout] = system(cmd); % Export lfp file
+    disp(cmdout)
+
     chanmap_file = dir(join([path_to_rec_dir, '\*kilosort\*channelmap*.dat']));
     ks_struct = readTrodesExtractedDataFile(fullfile(chanmap_file(1).folder,chanmap_file(1).name));
     nchan = length(ks_struct.fields(1).data);
@@ -84,8 +90,8 @@ if(exist(path_to_rec_file))
     fs = 30000; % sampling rate
     name = sprintf('Channel map from recording on %s_%s',date, time);
     save(fullfile(chanmap_file.folder, sprintf('channelMap_%s_%s.mat', date, time)), 'chanMap', 'chanMap0ind', 'connected','fs','kcoords','name','xcoords', 'ycoords')
-    mkdir(fullfile(path_to_rec_dir, 'kilosort_outdir'));
-    mkdir(fullfile(path_to_rec_dir, 'kilosort_workdir'));
+    %mkdir(fullfile(path_to_rec_dir, 'kilosort_outdir'));
+    %mkdir(fullfile(path_to_rec_dir, 'kilosort_workdir'));
     
 else
     disp("Recording file does not exist")
