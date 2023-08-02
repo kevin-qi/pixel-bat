@@ -2,13 +2,19 @@ function [rez] = runSplicedKilosort3(path_to_recording_dir)
 %RUNKILOSORT3 Summary of this function goes here
 %   Detailed explanation goes here
 
+path_to_recording_dir = "/media/batlab/BatDrive/AlphaPixels/data/29968/b149f_b151/raw/230602/ephys/20230602_104022.rec"
+path_to_recording_dir = "/home/batlab/mnt/server2/users/KevinQi/datasets/AlphaPixels/29968/b149f_b149f/raw/230601_230602/ephys/20230601_111411.rec"
+
+rootPath = "/media/batlab/BatDrive/AlphaPixels/src/pixel-bat"
+
+
 %% System Paths
 selfPath = fileparts(mfilename('fullpath')); % Path to directory containing runKilosort3.m
 rootPath = fileparts(selfPath); % This should be root path of pixel-bat
 
 addpath(genpath(fullfile(rootPath, 'Kilosort3'))) % path to kilosort folder
 addpath(fullfile(rootPath, 'utils\npy-matlab')) % for converting to Phy
-pathToYourConfigFile = fullfile(rootPath, 'Kilosort3Config\BatFlightConfig.m'); % Kilosort hyperparameters
+pathToYourConfigFile = fullfile(rootPath, 'Kilosort3Config', 'BatFlightConfig.m'); % Kilosort hyperparameters
 pathToYourConfigFile = char(pathToYourConfigFile);
 
 path_to_recording_dir = char(path_to_recording_dir);
@@ -96,13 +102,14 @@ ops.fbinary = fullfile(rootZ, fs(1).name);
 %% this block runs all the steps of the algorithm
 fprintf('Looking for data inside %s \n', rootZ)
 
-ops.NT = 65600*2;
+ops.NT = 65600;
 
 % Data preprocess
 rez                = preprocessDataSub(ops);
 
 %% Identify batch near the splice point between the 2 recordings;
 rez.ops.midpoint = floor(splice_idx/rez.ops.NT);
+
 
 % Drift Correction
 rez                = spliced_datashift2(rez, 1);
@@ -133,31 +140,57 @@ if getOr(ops, 'fig', 1)
     savefig(fig, fullfile(outDir, 'drift_traces.fig'))
     saveas(fig, fullfile(outDir, 'drift_traces.png'))
 
-    fig = figure;
+    fig=figure;
+    spkTh = 10; % same as the usual "template amplitude", but for the generic templates
+    tiledlayout(1,2);
     set(gcf, 'Color', 'w')
-    % raster plot of all spikes at their original depths
-    st_shift = rez.st0(:,2); %+ imin(batch_id)' * dd;
-    for j = rez.ops.spkTh:100
+    st3 = rez.st0;
+    % No Drift Correction
+    ax1 = nexttile; 
+    st_shift = st3(:,2);
+    for j = spkTh:100
         % for each amplitude bin, plot all the spikes of that size in the
         % same shade of gray
-        ix = rez.st0(:, 3)==j; % the amplitudes are rounded to integers
-        plot(rez.st0(ix, 1)/ops.fs, st_shift(ix), '.', 'color', [1 1 1] * max(0, 1-j/40)) % the marker color here has been carefully tuned
+        ix = st3(:, 3)==j; % the amplitudes are rounded to integers
+        plot(st3(ix, 1)/ops.fs, st_shift(ix), '.', 'color', [1 1 1] * max(0, 1-j/40)) % the marker color here has been carefully tuned
         hold on
     end
+    title('Raw Spike Map')
     axis tight
     box off
+    xline([rez.ops.midpoint*rez.ops.NTbuff/ops.fs], 'Alpha', 0.3);
+    yline(rez.custom.ysamp(rez.custom.ilast));
+    yline(rez.custom.ysamp(rez.custom.ifirst));
+
+    % With Drift Correction
+    ax2 = nexttile;
+    st_shift = st3(:,2) + rez.custom.spk_shifts;% imin(batch_id) * dd;
+    for j = spkTh:100
+        % for each amplitude bin, plot all the spikes of that size in the
+        % same shade of gray
+        ix = st3(:, 3)==j; % the amplitudes are rounded to integers
+        plot(st3(ix, 1)/ops.fs, st_shift(ix), '.', 'color', [1 1 1] * max(0, 1-j/40)) % the marker color here has been carefully tuned
+        hold on
+    end
+    title('Drift Corrected Spike Map')
+    axis tight
+    box off
+    xline([rez.ops.midpoint*rez.ops.NTbuff/ops.fs], 'Alpha', 0.3);
+    yline(rez.custom.ysamp(rez.custom.ilast));
+    yline(rez.custom.ysamp(rez.custom.ifirst));
+    linkaxes([ax1, ax2], 'xyz')
+
 
     xlabel('time (sec)')
     ylabel('spike position (um)')
-    title('Drift map')
+    
 
     savefig(fig, fullfile(outDir, 'drift_map.fig'))
     saveas(fig, fullfile(outDir, 'drift_map.png'))
-
 end
 
 %% Save outputs
-rezToPhy2(rez, outDir);
+pixelbat_rezToPhy2(rez, outDir);
 
 end
 

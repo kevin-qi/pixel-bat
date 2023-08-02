@@ -37,7 +37,8 @@ fprintf("Extracting data from %s \n\n", path_to_rec_dir);
 
 %% Select appropriate flags for extraction
 possible_flags = ["-lfp", "-analogio", "-kilosort", "-dio", "-spikes", "-spikeband", "-time", "-raw"];
-flags = possible_flags(logical([extractLFP extractAnalog extractKilosort extractDIO extractSpikes extractSpikeBand extractTime extractRaw]));
+idx = logical([extractLFP extractAnalog extractKilosort extractDIO extractSpikes extractSpikeBand extractTime extractRaw]);
+flags = possible_flags();
 cmd_flags = join(flags);
 
 lfp_options = sprintf("-lfplowpass %d -lfpoutputrate 1500 -uselfpfilters 1", lfpLowPass); % LFP export parameters

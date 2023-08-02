@@ -30,6 +30,7 @@ for i = 1:length(sensorNames)
         data = readTrodesExtractedDataFile(fullfile(path_to_recording_dir, mergedAnalog_dirname, fname));
         sensorVoltage = data.fields.data;
         sensors.(lower(sensorNames(i)))(j,:) = sensorVoltage;
+        sensors.raw.(lower(sensorNames(i)))(j,:)  = data;
     end
 end
 sensors.global_sample_timestamps_usec = global_sample_timestamps_usec;

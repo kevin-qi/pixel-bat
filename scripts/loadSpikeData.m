@@ -49,7 +49,9 @@ num_unit = size(good_unit ,1);
 
 for i = 1:num_unit
     out.spikeTimes_usec{i} = global_spike_times_usec(sp_unit == good_unit.cluster_id(i));
+    out.localSpikeTimes_usec{i} = local_spike_times_usec(sp_unit == good_unit.cluster_id(i));
 end
+
 
 end
 
