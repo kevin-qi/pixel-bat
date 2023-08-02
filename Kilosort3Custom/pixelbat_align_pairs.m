@@ -3,9 +3,14 @@ function d0 = align_pairs(F1, F2)
 % this little function aligns one average "frame" to another "frame" for
 % chronio alignment
 
-n = 50;
+n = 15;
 dc = zeros(2*n+1, 1);
 dt = -n:n;
+
+%figure;
+%plot(mean(F1,2));
+%hold on
+%plot(mean(F2,2));
 
 % do the loop
 for t = 1:length(dt)
@@ -15,7 +20,7 @@ for t = 1:length(dt)
     %disp(mean(mean(F1 .* Fs, 1), 2))
     %dc(t) = gather(sq(mean(mean(F1 .* Fs, 1), 2)));
     dc(t) = gather(corr2(F1,Fs));
-    dc(t) = gather(corr(mean(F1,2),mean(Fs,2)));
+    %dc(t) = gather(corr(mean(F1,2),mean(Fs,2)));
 end
 
 dtup = linspace(-n, n, (2*n*10)+1);
