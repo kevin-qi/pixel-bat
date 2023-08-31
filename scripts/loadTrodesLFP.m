@@ -10,6 +10,9 @@ assert(strcmp(ext, ".rec"), "Trodes recording directory must end in .rec");
 mergedLFP_dirname = dirname + "_merged.LFP";
 mergedTime_filename = dirname + "_merged.timestamps.dat";
 
+chPositionsFile = fullfile(path_to_recording_dir, 'kilosort_outdir', 'channel_positions.npy');
+chPositions = readNPY(chPositionsFile);
+
 timestamps = readTrodesExtractedDataFile(fullfile(path_to_recording_dir, ...
                                                   mergedLFP_dirname, ...
                                                   mergedTime_filename));
@@ -71,6 +74,7 @@ lfpData = struct();
 lfpData.timestamps = timestamps;
 lfpData.lfp = lfp;
 lfpData.channelMap = channelMap;
+lfpData.channelPositions = chPositions;
 lfpData.voltage_scaling = chData.voltage_scaling;
 lfpData.local_sample_timestamps_usec = local_sample_timestamps_usec;
 lfpData.timestamp_at_creation_usec = timestamp_at_creation_usec;
@@ -78,7 +82,6 @@ lfpData.first_timestamp_usec = first_timestamp_usec;
 lfpData.global_sample_timestamps_usec = global_sample_timestamps;
 lfpData.ttl_timestamps_usec = ttl_timestamps_usec;
 lfpData.first_sample_timestamps_usec = first_sample_timestamp_usec;
-
 %lfpData.sample_timestamps_usec = timestampData.sample_timestamps_usec;
 
 end
