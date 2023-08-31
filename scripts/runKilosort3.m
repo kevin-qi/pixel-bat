@@ -111,31 +111,50 @@ if getOr(ops, 'fig', 1)
     savefig(fig, fullfile(outDir, 'drift_traces.fig'))
     saveas(fig, fullfile(outDir, 'drift_traces.png'))
 
-    fig = figure;
+    fig=figure;
+    spkTh = 10; % same as the usual "template amplitude", but for the generic templates
+    tiledlayout(1,2);
     set(gcf, 'Color', 'w')
-    % raster plot of all spikes at their original depths
-    st_shift = rez.st0(:,2); %+ imin(batch_id)' * dd;
-    for j = rez.ops.spkTh:100
+    st3 = rez.st0;
+    % No Drift Correction
+    ax1 = nexttile; 
+    st_shift = st3(:,2);
+    for j = spkTh:100
         % for each amplitude bin, plot all the spikes of that size in the
         % same shade of gray
-        ix = rez.st0(:, 3)==j; % the amplitudes are rounded to integers
-        plot(rez.st0(ix, 1)/ops.fs, st_shift(ix), '.', 'color', [1 1 1] * max(0, 1-j/40)) % the marker color here has been carefully tuned
+        ix = st3(:, 3)==j; % the amplitudes are rounded to integers
+        plot(st3(ix, 1)/ops.fs, st_shift(ix), '.', 'color', [1 1 1] * max(0, 1-j/40)) % the marker color here has been carefully tuned
         hold on
     end
+    title('Raw Spike Map')
     axis tight
     box off
 
+    % With Drift Correction
+    ax2 = nexttile;
+    st_shift = st3(:,2) + rez.dshift;% imin(batch_id) * dd;
+    for j = spkTh:100
+        % for each amplitude bin, plot all the spikes of that size in the
+        % same shade of gray
+        ix = st3(:, 3)==j; % the amplitudes are rounded to integers
+        plot(st3(ix, 1)/ops.fs, st_shift(ix), '.', 'color', [1 1 1] * max(0, 1-j/40)) % the marker color here has been carefully tuned
+        hold on
+    end
+    title('Drift Corrected Spike Map')
+    axis tight
+    box off
+    linkaxes([ax1, ax2], 'xyz')
+
     xlabel('time (sec)')
     ylabel('spike position (um)')
-    title('Drift map')
-
+    
     savefig(fig, fullfile(outDir, 'drift_map.fig'))
     saveas(fig, fullfile(outDir, 'drift_map.png'))
 
 end
 
 %% Save outputs
-rezToPhy2(rez, outDir);
+pixelbat_rezToPhy2(rez, outDir);
 
 end
 
