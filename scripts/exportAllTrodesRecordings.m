@@ -1,6 +1,5 @@
 function [] = exportAllTrodesRecordings(data_path, trodes_path, varargin)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%exportAllTrodesRecordings Export all .rec recordings in data_path
 %   data_path : path to directory containing .rec folders
 
 assert(~endsWith(data_path, ".rec"), "data_path should point to parent folder of .rec directory")

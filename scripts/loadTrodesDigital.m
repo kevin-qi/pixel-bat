@@ -7,6 +7,7 @@ assert(strcmp(ext, ".rec"), "Trodes recording directory must end in .rec");
 
 mergedDigital_dirname = dirname + "_merged.DIO";
 
+%% Load data from 6 digital input channels
 for i = 1:6
     mergedDigital_filename = dirname + sprintf("_merged.dio_Controller_Din%d.dat", i);
     
