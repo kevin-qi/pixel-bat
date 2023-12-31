@@ -1,6 +1,19 @@
-function [rez] = runKilosort3(path_to_recording_dir)
+function [rez] = runKilosort3(path_to_recording_dir, varargin)
 %RUNKILOSORT3 Summary of this function goes here
 %   Detailed explanation goes here
+
+%% Argument Parser
+p = inputParser;
+addRequired(p, 'path_to_recording_dir');
+addOptional(p, 'probeNum', 1);
+addOptional(p, 'numChannels', 384);
+addOptional(p, 'nBlocks', 3);
+
+parse(p,path_to_recording_dir,varargin{:});
+
+probeNum = p.Results.probeNum;
+numChannels = p.Results.numChannels;
+nBlocks = p.Results.nBlocks;
 
 %% System Paths
 selfPath = fileparts(mfilename('fullpath')); % Path to directory containing runKilosort3.m
@@ -21,7 +34,7 @@ if(length(extractedKilosortFolder) == 0)
 else
     rootZ = fullfile(path_to_recording_dir, extractedKilosortFolder(1).name); % the raw data binary file is in this folder
     rootH = fullfile(path_to_recording_dir, 'kilosort_workdir'); % path to temporary binary file (same size as data, should be on fast SSD)
-    outDir = fullfile(path_to_recording_dir, 'kilosort_outdir');
+    outDir = fullfile(path_to_recording_dir, sprintf('kilosort_outdir_probe%d', probeNum));
     
     rootZ = char(rootZ);
     rootH = char(rootH);
@@ -35,46 +48,40 @@ else
         mkdir(outDir)
     end
 
-    channelMapFile = dir(fullfile(rootZ, 'channelMap_*_*.mat'));
+    channelMapFile = dir(fullfile(rootZ, sprintf('channelMap_probe%d_*.mat', probeNum)));
     if(length(channelMapFile) == 0)
         fprintf("No channelmap .mat file found in %s", rootZ)
     else
         pathToChannelMapFile = char(fullfile(rootZ, channelMapFile.name));
+        ops.chanMap = char(pathToChannelMapFile);
     end
 end
 
 
 %% Kilosort3 Parameter Overrides
 ops.trange    = [0 Inf]; % time range to sort
-ops.NchanTOT  = 384; % total number of channels in your recording
+ops.NchanTOT  = numChannels; % total number of channels in your recording
 
 run(fullfile(pathToYourConfigFile))
-ops.fproc   = fullfile(rootH, 'temp_wh.dat'); % proc file on a fast SSD
+ops.fproc   = fullfile(rootH, sprintf('temp_wh_probe_%d.dat', probeNum)); % proc file on a fast SSD
 ops.chanMap = fullfile(pathToChannelMapFile);
 
 % main parameter changes from Kilosort2 to v2.5
 ops.sig        = 20;  % spatial smoothness constant for registration
 ops.fshigh     = 300; % high-pass more aggresively
-ops.nblocks    = 5; % blocks for registration. 0 turns it off, 1 does rigid registration. Replaces "datashift" option. 
+ops.nblocks    = nBlocks; % blocks for registration. 0 turns it off, 1 does rigid registration. Replaces "datashift" option. 
 
 % main parameter changes from Kilosort2.5 to v3.0
-ops.Th       = [9 9];
+ops.Th       = [7 7];
 
-
-% is there a channel map file in this folder?
-fs = dir(fullfile(rootZ, 'chan*.mat'));
-if ~isempty(fs)
-    ops.chanMap = char(fullfile(rootZ, fs(1).name));
-else
-    fprintf("No channelmap .mat file found in %s", rootZ)
-end
 
 % find the binary file
-fs          = [dir(fullfile(rootZ, '*.bin')) dir(fullfile(rootZ, '*.probe*.dat'))];
+fs          = [dir(fullfile(rootZ, '*.bin')) dir(fullfile(rootZ, sprintf('*.probe%d.dat', probeNum)))];
 if(isempty(fs))
     fprintf("No data .bin file found in %s", rootZ)
 end
 ops.fbinary = fullfile(rootZ, fs(1).name);
+ops.NT = 65600*2;
 
 %% this block runs all the steps of the algorithm
 fprintf('Looking for data inside %s \n', rootZ)
@@ -132,7 +139,8 @@ if getOr(ops, 'fig', 1)
 
     % With Drift Correction
     ax2 = nexttile;
-    st_shift = st3(:,2) + rez.dshift;% imin(batch_id) * dd;
+    batch_id = st3(:,5);
+    st_shift = st3(:,2) + rez.dshift(batch_id);% imin(batch_id) * dd;
     for j = spkTh:100
         % for each amplitude bin, plot all the spikes of that size in the
         % same shade of gray
@@ -154,6 +162,7 @@ if getOr(ops, 'fig', 1)
 end
 
 %% Save outputs
+rez.probeNum = probeNum;
 pixelbat_rezToPhy2(rez, outDir);
 
 end

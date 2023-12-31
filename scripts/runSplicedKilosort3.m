@@ -1,16 +1,31 @@
-function [rez] = runSplicedKilosort3(path_to_recording_dir)
+function [rez] = runSplicedKilosort3(path_to_recording_dir, varargin)
 %RUNKILOSORT3 Summary of this function goes here
 %   Detailed explanation goes here
 
-path_to_recording_dir = "/media/batlab/BatDrive/AlphaPixels/data/29968/b149f_b151/raw/230602/ephys/20230602_104022.rec"
-path_to_recording_dir = "/home/batlab/mnt/server2/users/KevinQi/datasets/AlphaPixels/29968/b149f_b149f/raw/230601_230602/ephys/20230601_111411.rec"
+p = inputParser;
+addRequired(p, 'path_to_recording_dir');
+addOptional(p, 'probeNum', 1);
+addOptional(p, 'numChannels', 384);
 
-rootPath = "/media/batlab/BatDrive/AlphaPixels/src/pixel-bat"
+parse(p,path_to_recording_dir,varargin{:});
+
+probeNum = p.Results.probeNum;
+numChannels = p.Results.numChannels;
+
+
+%% Temp stuff
+probeNum = 1;
+numChannels = 192;
+path_to_recording_dir = "/media/batlab/BatDrive/AlphaPixels/data/29968/b149f_b151/raw/230602/ephys/20230602_104022.rec"
+path_to_recording_dir =  "D:\32623\flight_room_big_cage\raw\230911\ephys";
+path_to_recording_dir = "Z:\users\KevinQi\datasets\GridBat\32622\flight_room\raw\231010\ephys";
+
+rootPath = "C:\Users\batlab\Desktop\pixel-bat"
 
 
 %% System Paths
-selfPath = fileparts(mfilename('fullpath')); % Path to directory containing runKilosort3.m
-rootPath = fileparts(selfPath); % This should be root path of pixel-bat
+%selfPath = fileparts(mfilename('fullpath')); % Path to directory containing runKilosort3.m
+%rootPath = fileparts(selfPath); % This should be root path of pixel-bat
 
 addpath(genpath(fullfile(rootPath, 'Kilosort3'))) % path to kilosort folder
 addpath(fullfile(rootPath, 'utils\npy-matlab')) % for converting to Phy
@@ -27,7 +42,7 @@ if(length(extractedKilosortFolder) == 0)
 else
     rootZ = fullfile(path_to_recording_dir, extractedKilosortFolder(1).name); % the raw data binary file is in this folder
     rootH = fullfile(path_to_recording_dir, 'kilosort_workdir'); % path to temporary binary file (same size as data, should be on fast SSD)
-    outDir = fullfile(path_to_recording_dir, 'kilosort_outdir');
+    outDir = fullfile(path_to_recording_dir, sprintf('kilosort_outdir_probe%d', probeNum));
     
     rootZ = char(rootZ);
     rootH = char(rootH);
@@ -41,30 +56,31 @@ else
         mkdir(outDir)
     end
 
-    channelMapFile = dir(fullfile(rootZ, 'channelMap_*_*.mat'));
+    channelMapFile = dir(fullfile(rootZ, sprintf('channelMap_probe%d_*.mat', probeNum)));
     if(length(channelMapFile) == 0)
         fprintf("No channelmap .mat file found in %s", rootZ)
     else
         pathToChannelMapFile = char(fullfile(rootZ, channelMapFile.name));
+        ops.chanMap = char(pathToChannelMapFile);
     end
 end
 
 
 %% Kilosort3 Parameter Overrides
 ops.trange    = [0 Inf]; % time range to sort
-ops.NchanTOT  = 384; % total number of channels in your recording
+ops.NchanTOT  = numChannels; % total number of channels in your recording
 
 run(fullfile(pathToYourConfigFile))
-ops.fproc   = fullfile(rootH, 'temp_wh.dat'); % proc file on a fast SSD
+ops.fproc   = fullfile(rootH, sprintf('temp_wh_probe_%d.dat', probeNum)); % proc file on a fast SSD
 ops.chanMap = fullfile(pathToChannelMapFile);
 
 % main parameter changes from Kilosort2 to v2.5
 ops.sig        = 20;  % spatial smoothness constant for registration
 ops.fshigh     = 300; % high-pass more aggresively
-ops.nblocks    = 5; % blocks for registration. 0 turns it off, 1 does rigid registration. Replaces "datashift" option. 
+ops.nblocks    = 3; % blocks for registration. 0 turns it off, 1 does rigid registration. Replaces "datashift" option. 
 
 % main parameter changes from Kilosort2.5 to v3.0
-ops.Th       = [9 9];
+ops.Th       = [8 8];
 
 %% Identify midpoint between 2 merged recordings
 disp("Loading timestamps data to identify the splice point between recordings")
@@ -84,16 +100,9 @@ else
     splice_idx = 0;
 end
 
-% is there a channel map file in this folder?
-fs = dir(fullfile(rootZ, 'chan*.mat'));
-if ~isempty(fs)
-    ops.chanMap = char(fullfile(rootZ, fs(1).name));
-else
-    fprintf("No channelmap .mat file found in %s", rootZ)
-end
 
 % find the binary file
-fs          = [dir(fullfile(rootZ, '*.bin')) dir(fullfile(rootZ, '*.probe*.dat'))];
+fs          = [dir(fullfile(rootZ, '*.bin')) dir(fullfile(rootZ, sprintf('*.probe%d.dat', probeNum)))];
 if(isempty(fs))
     fprintf("No data .bin file found in %s", rootZ)
 end
@@ -102,7 +111,7 @@ ops.fbinary = fullfile(rootZ, fs(1).name);
 %% this block runs all the steps of the algorithm
 fprintf('Looking for data inside %s \n', rootZ)
 
-ops.NT = 65600;
+ops.NT = 65600*2;
 
 % Data preprocess
 rez                = preprocessDataSub(ops);
