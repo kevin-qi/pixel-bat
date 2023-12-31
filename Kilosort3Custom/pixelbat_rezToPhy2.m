@@ -197,7 +197,7 @@ if ~isempty(savePath)
         end
 %         fprintf(fid,['dat_path = ''',fname ext '''\n']);
         %fprintf(fid,['dat_path = ''', strrep(rez.ops.fproc, '\', '/') '''\n']);
-        fprintf(fid,['dat_path = ''', strrep('../kilosort_workdir/temp_wh.dat', '\', '/') '''\n']);
+        fprintf(fid,['dat_path = ''', strrep(sprintf('../kilosort_workdir/temp_wh_probe_%d.dat',rez.probeNum), '\', '/') '''\n']);
         
         fprintf(fid,'n_channels_dat = %i\n',rez.ops.Nchan);
         

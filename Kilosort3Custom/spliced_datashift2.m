@@ -50,7 +50,7 @@ dmax  = 1 + ceil((ymax-dmin)/dd);
 disp(dmax)
 
 
-spkTh = 10; % same as the usual "template amplitude", but for the generic templates
+spkTh = 8; % same as the usual "template amplitude", but for the generic templates
 
 % Extract all the spikes across the recording that are captured by the
 % generic templates. Very few real spikes are missed in this way. 
