@@ -22,7 +22,7 @@ if(exist(fullfile(path_to_recording_dir, kilosort_out_folder_name, 'cluster_info
         
         % Clusters labeled 'good' after manual curation
         good_unit_idx = strcmp(phy.group, 'good'); 
-        good_units = phy(good_unit_idx, {'cluster_id', 'Amplitude', 'ch', 'depth', 'fr', 'n_spikes', 'KSLabel', 'group'});
+        good_units = phy(good_unit_idx, {'cluster_id', 'Amplitude', 'ch', 'depth', 'fr', 'n_spikes', 'KSLabel', 'group', 'ContamPct'});
         
         % Clusters labeled 'mua' after manual curation
         mua_unit_idx = logical(~strcmp(phy.group, 'good') .* ~strcmp(phy.group, 'noise'));
@@ -65,7 +65,6 @@ if(exist(fullfile(path_to_recording_dir, kilosort_out_folder_name, 'cluster_info
         out.good_units.spikeTimes_usec = spikeTimes_usec.';
         out.good_units.localSpikeTimes_usec = localSpikeTimes_usec.';
         out.good_units.spikeTimeSampleIdx = spikeTimeSampleIdx.';
-        
         %% Populate data structure with mua units
         out.mua_units = mua_units;
         spikeTimes_usec = {};
