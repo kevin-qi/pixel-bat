@@ -1,0 +1,64 @@
+{
+ "noise": {
+  "num_positive_peaks": {
+   "greater": null,
+   "less": 2
+  },
+  "num_negative_peaks": {
+   "greater": null,
+   "less": 1
+  },
+  "peak_to_trough_duration": {
+   "greater": 0.0001,
+   "less": 0.00115
+  },
+  "waveform_baseline_flatness": {
+   "greater": null,
+   "less": 0.5
+  },
+  "peak_after_to_trough_ratio": {
+   "greater": null,
+   "less": 0.8
+  },
+  "exp_decay": {
+   "greater": 0.01,
+   "less": 0.1
+  }
+ },
+ "mua": {
+  "num_spikes": {
+   "greater": 500,
+   "less": null
+  },
+  "presence_ratio": {
+   "greater": 0.5,
+   "less": null
+  },
+  "refractory_good": {
+   "greater": 1,
+   "less": null
+  }
+ },
+ "non-somatic": {
+  "peak_before_to_trough_ratio": {
+   "greater": null,
+   "less": 3
+  },
+  "peak_before_width": {
+   "greater": 0.00015,
+   "less": null
+  },
+  "trough_width": {
+   "greater": 0.0002,
+   "less": null
+  },
+  "peak_before_to_peak_after_ratio": {
+   "greater": null,
+   "less": 3
+  },
+  "main_peak_to_trough_ratio": {
+   "greater": null,
+   "less": 0.8
+  }
+ }
+}

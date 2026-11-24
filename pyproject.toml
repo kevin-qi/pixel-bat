@@ -1,3 +1,43 @@
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pixelbat"
+version = "0.2.0"
+description = "Spike sorting (Kilosort 2.5 with the Moser patch set, Kilosort 4) and browser curation of Neuropixels recordings"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+# Kilosort 4 is pinned: its final merge is patched by name
+sorting = [
+    "kilosort==4.1.7",
+    "torch",
+]
+curation = [
+    "kilosort==4.1.7",
+    "torch",
+    "spikeinterface==0.104.9",
+    "bombcell[spikeinterface]==0.94",
+]
+
+[project.scripts]
+pixelbat-curate = "pixelbat.curation.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pixelbat*"]
+
+[tool.setuptools.package-data]
+"pixelbat.curation" = ["index.html", "thresholds.json", "sessions_example.csv"]
+"pixelbat.sorting" = ["recordings_example.csv", "kilosort25_moser/**/*"]
+
+[tool.uv]
+# The curator and the sorters run on Linux (or WSL2)
+environments = ["sys_platform == 'linux'"]

@@ -1,0 +1,40 @@
+P8. Switch for the correlogram veto on splits, postProcess/splitAllClusters.m:126. rez.ops.split_ccg_veto = 1: stock
+(a candidate whose two halves show a correlogram dip, Q12 < 0.25 and R < 0.05, is not split). 0: the dip does not stop
+the split. The field is required. rez.split_log gains two columns: 8, the dip criterion is met; 9, the new unit of a split
+that was made (the other half keeps the unit of column 1), 0 if none.
+
+diff --git a/postProcess/splitAllClusters.m b/postProcess/splitAllClusters.m
+--- a/postProcess/splitAllClusters.m
++++ b/postProcess/splitAllClusters.m
+@@ -30,7 +30,8 @@
+ isplit = 1:Nfilt; % keep track of original cluster for each cluster. starts with all clusters being their own origin.
+ dt = 1/1000;
+ nccg = 0;
+-rez.split_log = zeros(0,7); rez.split_low = {};
++rez.split_log = zeros(0,9); rez.split_low = {};
++ccg_veto = rez.ops.split_ccg_veto;
+ 
+ while ik<Nfilt
+     if rem(ik, 100)==1
+@@ -119,11 +120,11 @@
+     [K, Qi, Q00, Q01, rir] = ccg(ss(ilow), ss(~ilow), 500, dt); % compute the cross-correlogram between spikes in the putative new clusters
+     Q12 = min(Qi/max(Q00, Q01)); % refractoriness metric 1
+     R = min(rir);                % refractoriness metric 2
+-    rez.split_log(end+1,:) = [ik nSpikes Q12 R nremove plow phigh]; rez.split_low{end+1} = uint32(isp(ilow));
++    rez.split_log(end+1,:) = [ik nSpikes Q12 R nremove plow phigh (Q12<.25 && R<.05) 0]; rez.split_low{end+1} = uint32(isp(ilow));
+ 
+     % if the CCG has a dip, don't do the split.
+     % These thresholds are consistent with the ones from merges.
+-    if Q12<.25 && R<.05 % if both metrics are below threshold.
++    if ccg_veto && Q12<.25 && R<.05 % if both metrics are below threshold.
+         nccg = nccg+1; % keep track of how many splits were voided by the CCG criterion
+         continue;
+     end
+@@ -148,6 +149,7 @@
+     if nremove > .05 && min(plow,phigh)>ccsplit && min(sum(ilow), sum(~ilow))>300
+        % one cluster stays, one goes
+        Nfilt = Nfilt + 1;
++       rez.split_log(end,9) = Nfilt;
+ 
+        % the templates for the splits have been estimated from PC coefficients
+        rez.dWU(:,iC(:, iW(ik)),Nfilt) = c2;

@@ -1,0 +1,2341 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Unit curation</title>
+<style>
+  body { --bg: #fff; --fg: #111; --fg2: #444; --line: #c8c8c8; --key: #f1f1f1; --on: #d5deea; --accent: #0072B2; }
+  body.dark { --bg: #161616; --fg: #ececec; --fg2: #b8b8b8; --line: #444; --key: #2a2a2a; --on: #3a4658; --accent: #56B4E9; }
+  html, body { margin: 0; height: 100%; font: 14px system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+  #goto { font: inherit; height: 22px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; flex: 0 0 auto; }
+  select, button { font: inherit; background: var(--key); color: var(--fg); border: 1px solid var(--line); border-radius: 4px;
+                   padding: 4px 8px; cursor: pointer; height: 30px; white-space: nowrap; flex: 0 0 auto; }
+  button:hover { filter: brightness(0.93); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  #top { min-height: 40px; display: flex; align-items: center; gap: 4px 6px; padding: 2px 10px; border-bottom: 1px solid var(--line);
+         flex-wrap: wrap; box-sizing: border-box; }
+  #session { max-width: 165px; } #outcome { flex: 0 1 auto; white-space: nowrap; } #left { flex: 0 1 auto; white-space: nowrap; }
+  #outcome i { display: inline-block; width: 10px; height: 10px; margin: 0 3px 0 6px; vertical-align: -1px; }
+  #left { border-left: 1px solid var(--line); padding-left: 10px; } #left a { color: inherit; cursor: pointer; text-decoration: underline dotted; }
+  #top button, #top select, #top label { flex: 0 0 auto; }
+  #menu { position: relative; flex: 0 0 auto; } #menu summary { list-style: none; cursor: pointer; padding: 4px 8px; border: 1px solid var(--line);
+    border-radius: 4px; background: var(--key); height: 20px; } #menu summary::-webkit-details-marker { display: none; }
+  #menu div { position: absolute; right: 0; top: 34px; background: var(--bg); border: 1px solid var(--line); padding: 8px; display: flex;
+    flex-direction: column; gap: 6px; z-index: 6; box-shadow: 0 2px 12px #0005; }
+  body { display: flex; flex-direction: column; }
+  #main { display: flex; flex: 1; min-height: 0; }
+  #listBox { flex: 1 1 45%; display: flex; flex-direction: column; min-width: 0; }
+  #columns { flex: 0 0 auto; display: block; border-bottom: 1px solid var(--line); }
+  #list { flex: 1 1 auto; overflow-y: scroll; position: relative; }
+  .accept { position: absolute; pointer-events: none; outline: 3px dashed var(--accent); outline-offset: -4px; z-index: 2; }
+  #list canvas, #list button { position: absolute; }
+  #hover { position: absolute; display: none; pointer-events: none; background: rgba(0, 0, 0, 0.03); z-index: 2; }
+  body.dark #hover { background: rgba(255, 255, 255, 0.04); }
+  #list canvas { left: 0; }
+  #list button { height: 26px; padding: 2px 9px; font-size: 13px; }
+  #panel { flex: 0 0 55%; border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
+  .bar { padding: 3px 10px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; min-height: 36px; box-sizing: border-box; }
+  /* A narrow panel (set in the page when the buttons with their key letters take more than two lines) */
+  body.narrow #panel .bar { gap: 3px; padding: 4px 6px 0 6px; } body.narrow #panel .bar button { padding: 3px 5px; font-size: 13px; }
+  body.narrow #panel .bar .k { display: none; }
+  .bar .fill { flex: 1; }
+  #merge { background: #1c5fb0; color: #fff; border-color: #1c5fb0; font-weight: 600; }
+  .label { border-left-width: 5px; }
+  #panel { position: relative; }
+  #status { position: absolute; left: auto; right: 10px; max-width: calc(100% - 20px); box-sizing: border-box; bottom: 10px; padding: 6px 14px; font-weight: 600; border-radius: 16px; background: var(--key);
+            border: 1px solid var(--line); box-shadow: 0 2px 12px #0005; z-index: 3; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
+  #status.shown { opacity: 1; transition: none; }
+  #status.bad { background: #c92a2a; color: #fff; }
+
+  #compareBox { flex: 1; overflow-y: auto; border-top: 1px solid var(--line); padding-bottom: 50px; }
+  #compareBox canvas { display: block; }
+  #help { position: fixed; inset: 5% 14%; background: var(--bg); border: 1px solid var(--line); padding: 14px 28px; overflow: auto;
+          box-shadow: 0 4px 30px #0007; display: none; line-height: 1.6; font-size: 15px; z-index: 5; }
+  #help h3 { margin: 4px 0 8px; }
+  #help .keys { columns: 2; column-gap: 32px; font-size: 14px; line-height: 1.35; }
+  #help table { border-collapse: collapse; margin-bottom: 10px; width: 100%; }
+  #help th { text-align: left; padding: 2px 0 4px; } #help tr { break-inside: avoid; }
+  #help td { padding: 2px 10px 2px 0; vertical-align: top; } #help td:first-child { white-space: nowrap; width: 11em; }
+  #help dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 16px; margin: 0; line-height: 1.45; }
+  #help dt { font-weight: 600; } #help dd { margin: 0; }
+  #help details { margin-top: 12px; } #help summary { cursor: pointer; font-weight: 600; }
+  kbd { border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; background: var(--key); font: 13px monospace; }
+</style></head><body>
+<div id="top">
+  <select id="session"></select>
+  <input id="goto" type="text" placeholder="unit… /" size="5" title="Type a unit number and press Enter; Shift+Enter adds it to the selection">
+  <span id="outcome"></span><span id="left"></span>
+  <label style="margin-right: auto" title="Show only what was still to decide when ticked; what you decide afterwards stays in view until you tick it again (h)"><input type="checkbox" id="remaining"> TODO only</label>
+  <button id="export" title="Export the curated sort as a Phy folder">Export</button><button id="helpButton" title="Keys and words (?)">?</button>
+  <details id="menu"><summary title="View settings">⋯</summary><div>
+    <label><input type="checkbox" id="depth"> depth order</label>
+    <button id="dark" title="Dark mode">◐ dark mode</button>
+    <select id="zoom" title="Size of everything"><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option></select>
+  </div></details>
+</div>
+<div id="main"><div id="listBox"><canvas id="columns"></canvas><div id="list"><div id="spacer"></div><div id="hover"></div></div></div>
+  <div id="panel">
+    <div class="bar">
+      <button id="merge" data-key="M" title="Merge the selected units into one (shift+M)">Merge<span class="k"> ⇧M</span></button>
+      <button data-key="g" class="label" data-label="good" title="Label good (g)">good<span class="k"> g</span></button>
+      <button data-key="m" class="label" data-label="mua" title="Label mua (m)">mua<span class="k"> m</span></button>
+      <button data-key="n" class="label" data-label="noise" title="Label noise (n)">noise<span class="k"> n</span></button>
+      <button data-key="u" class="label" data-label="unstable" title="Label unstable (u)">unstable<span class="k"> u</span></button>
+      <button data-key="f" class="label" data-label="few" title="Label few spikes (f)">few<span class="k"> f</span></button>
+      <span class="fill"></span><button data-key="z" title="Undo the last decision (z)">Undo<span class="k"> z</span></button>
+    </div>
+    <div id="compareBox"><div id="sections"></div></div>
+    <div id="status"></div>
+  </div></div>
+<div id="help">
+  <h3>Keys</h3>
+  <div class="keys">
+    <table><tr><th colspan="2">Select</th></tr>
+      <tr><td>click a group</td><td>all its units; a row of it: that unit</td></tr>
+      <tr><td>click a section header</td><td>every unit of the section (not merge groups)</td></tr>
+      <tr><td>shift+click</td><td>every unit from the last click to here</td></tr>
+      <tr><td>ctrl+click, tick box</td><td>add or remove one unit</td></tr>
+      <tr><td><kbd>1</kbd> <kbd>2</kbd> …</td><td>rows of the group: the first alone, then add or remove</td></tr>
+      <tr><td><kbd>j</kbd> <kbd>↓</kbd> <kbd>k</kbd> <kbd>↑</kbd></td><td>next, previous item</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>between tiles</td></tr>
+      <tr><td><kbd>e</kbd></td><td>next undecided row, group or unit</td></tr>
+      <tr><td><kbd>h</kbd></td><td>TODO only: hide what is decided when ticked; your later decisions stay in view until you tick it again</td></tr>
+      <tr><td><kbd>/</kbd></td><td>go to a unit (shift+Enter adds it)</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>drop the reference units, or reselect the item</td></tr>
+    </table>
+    <table><tr><th colspan="2">View (also the controls in the plot titles)</th></tr>
+      <tr><td><kbd>w</kbd></td><td>mean, 100 single spikes, or density</td></tr>
+      <tr><td><kbd>o</kbd></td><td>waveforms overlaid or side by side</td></tr>
+      <tr><td><kbd>-</kbd> <kbd>=</kbd> <kbd>0</kbd></td><td>waveform scale smaller, larger, ×1</td></tr>
+      <tr><td><kbd>r</kbd></td><td>spikes on flight paths, or rate maps</td></tr>
+      <tr><td><kbd>,</kbd> <kbd>.</kbd></td><td>flight plot: all units, then each alone</td></tr>
+      <tr><td><kbd>b</kbd></td><td>flight plot: one colour or each its own</td></tr>
+      <tr><td>show</td><td>spikes on position are hidden for every new selection, so spatial firing cannot decide merges or labels; the show button (confirmed once) reveals them for artefact checks</td></tr>
+      <tr><td><kbd>s</kbd></td><td>add the 3 most similar units for reference</td></tr>
+      <tr><td><kbd>p</kbd></td><td>add the best partner within 100 µm</td></tr>
+      <tr><td><kbd>Space</kbd> shift+<kbd>Space</kbd></td><td>page the panel down, up</td></tr>
+      <tr><td><kbd>?</kbd></td><td>this help (Esc or a click closes it)</td></tr>
+    </table>
+    <table><tr><th colspan="2">Decide (on the selection, which stays)</th></tr>
+      <tr><td><kbd>g</kbd> <kbd>m</kbd> <kbd>n</kbd> <kbd>u</kbd> <kbd>f</kbd></td><td>good, mua, noise, unstable, few spikes</td></tr>
+      <tr><td><kbd>⌫</kbd></td><td>remove the label</td></tr>
+      <tr><td>shift+<kbd>M</kbd></td><td>merge the selected units</td></tr>
+      <tr><td>shift+<kbd>U</kbd>, Unmerge</td><td>split a merged unit again</td></tr>
+      <tr><td><kbd>a</kbd></td><td>accept the tiles on screen as proposed</td></tr>
+      <tr><td><kbd>t</kbd> shift+<kbd>T</kbd></td><td>apply, remove an amplitude floor</td></tr>
+      <tr><td>shift+<kbd>F</kbd></td><td>flag or unflag (not exported)</td></tr>
+      <tr><td><kbd>z</kbd></td><td>undo the last decision</td></tr>
+    </table>
+  </div>
+  <h3>Words, in panel order</h3>
+  <dl>
+    <dt>chips and shading</dt><dd>dashed chip: Bombcell's proposal; filled ✓ chip: your label, which also shades the unit's
+      text and puts a bar in its colour at its left. Selected: blue outline and blue bar at the right. Five squares: Bombcell's
+      label on 5 draws of 500 spikes (the outlined first one is the proposal).</dd>
+    <dt>number columns</dt><dd><i>foreign %</i>: estimated share of the unit's spikes from other cells (pairs 0.25–1.25 ms
+      apart against what its own firing 10–50 ms away predicts; red over 20%, where the proposal turns mua). <i>KS ratio</i>:
+      Kilosort's contamination ratio (amber from 0.2). <i>short ISI %</i>: intervals of 0.25–1.25 ms (amber over 0.5%).
+      <i>µV</i>: amplitude (of a merged unit: the spike-weighted mean of its parts). <i>present %</i>: minutes with spikes.
+      Blank: too few spikes to test.</dd>
+    <dt>decision strip</dt><dd><i>Kilosort</i>: what it would have done (the sort ran unmerged), and its template similarity
+      (of the least similar pair). <i>Bombcell</i>: its label for the merged unit. <i>this tool</i>: merge (duplicate spikes,
+      or every pair passes the refractory test), keep apart (a pair fails, or the merged unit would be over 20% foreign),
+      or untestable (under 3 spikes expected within 1 ms, or a dip that is not significant). <i>you</i>: your decision;
+      an undecided group is exported split. Groups under 500 spikes in all are merged by this tool when the session opens.</dd>
+    <dt>cross-correlogram</dt><dd>spike pairs at each lag as a multiple of chance (1× = independent units), on a log axis
+      shared by the group's pairs. Kilosort 4's refractory test is drawn in it: the 1 ms bins it counts (blue, with their
+      level) must lie under the pass line (red dashed: its limit times the flank level, black). The verdict is in the corner;
+      the pair that decides the group's reading is framed.</dd>
+    <dt>footprint, spikes per 5 min</dt><dd>peak-to-peak amplitude per channel against depth, each unit over its own
+      largest (r: their correlation, on the channels both have data on); spike counts over the session.</dd>
+    <dt>foreign spikes</dt><dd>the foreign % of each unit and of the merge, against the 20% line, with the pairs seen and
+      expected 0.25–1.25 ms apart.</dd>
+    <dt>possible merges</dt><dd>pairs no one proposed: waveforms alike across channels (r ≥ 0.85) and an empty centre or
+      turn-taking. A pair kept apart stays in place, folded to its header.</dd>
+    <dt>uncertain, few spikes, non-somatic</dt><dd>Bombcell's label differs between draws; under 500 spikes; a tag for an
+      axonal-looking waveform that does not change the proposal.</dd>
+  </dl>
+  <details><summary>How the numbers are computed</summary>
+    <p><b>Refractory test</b>: Kilosort 4's cross-refractory test on the two units' 1 ms cross-correlogram (larger unit
+    first): the least filled window of ±1 to ±10 bins around zero against the flank level (10–50 ms or the far shoulders);
+    it passes when that ratio is under the sort's limit and the dip is significant (p &lt; 0.05). A merge drops duplicates
+    by Kilosort's rule. Bombcell's label of a merged unit uses its spike numbers with the shape of its largest member.</p>
+    <p><b>Amplitude floor</b>: with one unmerged unit selected, click in its amplitude plot to try a floor; <kbd>t</kbd>
+    applies it, shift+<kbd>T</kbd> removes it. The spikes below are exported as a unit of their own, labelled noise.</p>
+    <p><b>Plots</b>: rows of a group share waveform scale (set by the units not proposed noise) and amplitude axis; an
+    amplitude axis breaks when its top is over 3 times the largest 99.5th percentile of those units. Rate maps: GridBat's,
+    0.1 m bins, smoothed 1.2 bins, each coloured 0 to its 99th percentile.</p>
+  </details>
+</div>
+<script>
+const LABELS = ['good', 'mua', 'noise', 'unstable', 'few'];
+const WORDS = {non_soma: 'non-somatic', few: 'few spikes'};
+const SECTIONS = [['groups', 'Merge groups'], ['possible', 'Possible merges'], ['uncertain', 'Uncertain'], ['good', 'Bombcell proposes good'],
+                  ['mua', 'Bombcell proposes mua'], ['non_soma', 'Bombcell proposes non-somatic'], ['noise', 'Bombcell proposes noise'], ['few', 'Few spikes (under 500)']];
+const ROW = 96, TILE_MIN = 270, TILE_H = 172, HEAD = 32, TEXT_W = 360, CHECK_W = 34, TILE_SITES = 3, DENSITY_SITES = 4, AXIS_H = 15, MANY = 16, STRIP_H = 44;
+// Bombcell's tests, in plain words (the presence limit comes from the session)
+const TESTS = {num_spikes: 'few spikes', num_negative_peaks: 'several troughs', num_positive_peaks: 'several peaks', peak_to_trough_duration: 'odd trough–peak width',
+               peak_after_to_trough_ratio: 'large after-peak', exp_decay: 'no spatial decay', waveform_baseline_flatness: 'noisy baseline'};
+// Label shades and inks, selection and unit colours: distinct under deuteranopia (checked with colorspacious, Machado 2009)
+const THEMES = {
+  light: {bg: '#fff', text: '#111', text2: '#444', trace: '#222', header: '#dfe5ee', groupHead: '#f1f1f1', mergedHead: '#e3ecf7', band: '#ffd9d9',
+          window: '#ffd9d9', frame: '#bbb', rule: '#d8d8d8', ccg: '#666', bars: '#555', ref: '#5f5f5f', path: 'rgba(0,0,0,0.13)', bad: '#c92a2a', amber: '#b05f00',
+          shade: {good: '#a6ecbb', mua: '#f2a93b', noise: '#8f8f8f', unstable: '#c79be3', few: '#cbcbcb'},
+          sel: 'rgba(0,80,220,0.25)', focus: 'rgba(0,80,220,0.36)', accent: '#0057c8',
+          ink: {good: '#007a4d', mua: '#b05f00', noise: '#3a3a3a', unstable: '#9b4fc8', few: '#6e6e6e', non_soma: '#2a6f97'},
+          colors: ['#0072B2', '#D55E00', '#009E73', '#CC79A7', '#E69F00', '#000000', '#56B4E9', '#882255', '#DDCC77', '#332288']},
+  dark: {bg: '#161616', text: '#ececec', text2: '#b8b8b8', trace: '#e4e4e4', header: '#2f3947', groupHead: '#2a3038', mergedHead: '#1f3557', band: 'rgba(220,90,90,0.22)',
+         window: 'rgba(220,90,90,0.16)', frame: '#555', rule: '#333', ccg: '#9a9a9a', bars: '#9a9a9a', ref: '#9a9a9a', path: 'rgba(255,255,255,0.28)', bad: '#ff6b6b', amber: '#f0a830',
+         shade: {good: '#2f6b45', mua: '#80570e', noise: '#565656', unstable: '#4a2a66', few: '#333333'},
+         sel: 'rgba(86,180,233,0.36)', focus: 'rgba(86,180,233,0.48)', accent: '#56B4E9',
+         ink: {good: '#3fcf8e', mua: '#f0a830', noise: '#d0d0d0', unstable: '#f08cc0', few: '#9a9a9a', non_soma: '#ff7a6b'},
+         colors: ['#4aa3ff', '#ff8a4c', '#2fd0a0', '#e58fc4', '#ffc23d', '#e4e4e4', '#7fd0ff', '#d06090', '#a0785a', '#8b6cff']}};
+let T = THEMES.light;
+const S = {sel: [], ref: [], focusUnit: null, posOnly: null, overlay: {mean: true, spikes: false, density: false}, view: 'mean', traces: new Map(), ratemaps: new Map(), amps: new Map(), sortedAmps: new Map(), floors: '', canvases: new Map(), extras: new Map(), lines: [],
+           trains: new Map(), pairs: new Map(), ks: new Map(), partners: new Map(), footprints: new Map(), footprintAsks: new Map(), traceAsks: new Map(), chosen: new Set(), waveforms: new Map(), shared: new Map(), panelCanvases: new Map(), paths: new Map(), mapBoxes: new Map(), toggles: {}, colors: new Map(), queue: Promise.resolve(), loading: true};
+const list = document.getElementById('list'), spacer = document.getElementById('spacer'), measure = document.createElement('canvas').getContext('2d'), compareBox = document.getElementById('compareBox'), sectionsBox = document.getElementById('sections');
+const getJSON = url => fetch(url).then(r => r.json());
+// Messages over the bottom of the panel: routine ones fade after 3 s, errors and questions (`stay`) last until the next key or click
+const status = (text, bad, stay) => {
+  const e = document.getElementById('status');
+  e.textContent = text; e.className = (text ? 'shown' : '') + (bad ? ' bad' : '');
+  clearTimeout(S.toastTimer);
+  if (text && !bad && !stay) S.toastTimer = setTimeout(() => status(''), 3000);
+};
+window.addEventListener('error', e => status(`ERROR: ${e.message} (line ${e.lineno})`, true));
+window.addEventListener('unhandledrejection', e => status('ERROR: ' + (e.reason && e.reason.message || e.reason), true));
+const unitOf = id => S.byId.get(id);
+const fmt = (value, digits) => value === null || value === undefined ? '–' : value.toFixed(digits);
+const rate = value => `${value >= 1 ? value.toFixed(1) : +value.toPrecision(2)} Hz`;
+// Intervals of 1 ms or less: the count seen, against the count per ms of the unit's own autocorrelogram 10-50 ms away
+// (what it would show there with no refractory period)
+function expectedShort(counts) { let sum = 0; for (let i = 60; i < 100; i++) sum += counts[i]; return sum / 40; }
+// Three contamination measures. Foreign spikes: the estimated share of the unit's spikes that come from other cells
+// (pairs 0.25 to 1.25 ms apart against the unit's own rate 10 to 50 ms away); the proposed good or mua follows it. Kilosort ratio: Kilosort's own contamination, the centre of
+// the autocorrelogram against its baseline. Short intervals: the share of inter-spike intervals of 0.25 to 1.25 ms (0.5% is a reference line, not a rule).
+const percent = (value, digits) => value === null || value === undefined ? '–' : `${(100 * value).toFixed(digits)}%`;
+const contamination = u => percent(u.rp_contamination, 0);
+const kilosortRatio = u => fmt(u.ks_ratio, 2);
+const shortIntervals = u => percent(u.short_fraction, 2);
+
+// Alarm colours only for a number over its threshold: foreign over 20% red, short ISI over 0.5% amber
+const foreignHigh = u => Number.isFinite(u.rp_contamination) && u.rp_label !== 'good';
+const shortHigh = u => Number.isFinite(u.short_fraction) && u.short_fraction > 0.005;
+const ksHigh = u => Number.isFinite(u.ks_ratio) && u.ks_ratio >= 0.2;
+// A value's colour: grey when missing, red or amber over its threshold
+const valueInk = (value, alarm) => value.startsWith('–') ? T.text2 : alarm === 'amber' ? T.amber : alarm ? T.bad : T.text;
+// Autocorrelogram counts of a train of n spikes as a rate (Hz)
+const hzOf = (counts, n) => Float64Array.from(counts, c => c / (n * 0.001));
+// The three contamination measures, primary first: name, value, alarm
+const measures = u => [['foreign', contamination(u), foreignHigh(u)], ['KS ratio', kilosortRatio(u), ksHigh(u) && 'amber'], ['short ISI', shortIntervals(u), shortHigh(u) && 'amber']];
+// A unit with too few spikes for the contamination tests (foreign and KS ratio left blank)
+const untested = u => u.rp_contamination === null || u.rp_contamination === undefined;
+const blank = (value, show) => value === null || value === undefined ? '' : show(value);
+// Waveform similarity of two original units
+const similarityOf = (a, b) => S.A.similarity.data[S.rowOf.get(a) * S.A.similarity.shape[1] + S.rowOf.get(b)];
+
+const word = label => WORDS[label] || label;
+const remember = (key, value) => localStorage.setItem('curation.' + key, value);
+const recall = key => localStorage.getItem('curation.' + key);
+
+// Data: every array is loaded once per session, one row per original unit
+async function loadArrays(name) {
+  const buffer = await fetch(`/arrays/${name}`).then(r => r.arrayBuffer());
+  const headerLength = new DataView(buffer).getUint32(0, true);
+  const header = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 4, headerLength)));
+  const types = {float32: Float32Array, int32: Int32Array, uint8: Uint8Array, uint32: Uint32Array};
+  let offset = Math.ceil((4 + headerLength) / 8) * 8;
+  const arrays = {};
+  for (const [key, [dtype, shape]] of Object.entries(header)) {
+    const count = shape.reduce((a, b) => a * b, 1);
+    arrays[key] = {data: new types[dtype](buffer, offset, count), shape};
+    offset += Math.ceil(count * types[dtype].BYTES_PER_ELEMENT / 8) * 8;
+  }
+  // Each unit's spike samples come as differences from the one before
+  const {spike_offset, spike_sample} = arrays;
+  for (let r = 0; r + 1 < spike_offset.data.length; r++) {
+    let sum = 0;
+    for (let i = spike_offset.data[r]; i < spike_offset.data[r + 1]; i++) sum = spike_sample.data[i] = (sum + spike_sample.data[i]) >>> 0;
+  }
+  return arrays;
+}
+async function openSession(name) {
+  status('loading session…', false, true);
+  S.loading = true; S.sel = []; S.chosen = new Set(); S.ref = []; S.units = [];
+  S.firstPairs = null; S.done = null;
+  for (const cache of [S.trains, S.pairs, S.ks, S.paths, S.mapBoxes, S.traces, S.traceAsks, S.ratemaps, S.amps, S.sortedAmps, S.partners, S.footprints, S.footprintAsks, S.waveforms, S.shared]) cache.clear();
+  document.getElementById('session').value = name;
+  S.name = name;
+  // Merged units' waveforms are asked as soon as the table names them, while the arrays load
+  const table = getJSON(`/table/${name}`), [meta, arrays] = await Promise.all([getJSON(`/session/${name}`), loadArrays(name),
+    table.then(t => loadWaveforms(t.units.filter(u => u.members.length > 1).map(u => u.unit)))]);
+  S.meta = meta; S.A = arrays;
+  S.rowOf = new Map(meta.ids.map((id, row) => [id, row]));
+  S.flightClusters = Object.keys(meta.paths);
+  S.bounds = [Infinity, -Infinity, Infinity, -Infinity];
+  for (const path of Object.values(meta.paths)) for (const p of path) if (p[0] !== null)
+    S.bounds = [Math.min(S.bounds[0], p[0]), Math.max(S.bounds[1], p[0]), Math.min(S.bounds[2], p[1]), Math.max(S.bounds[3], p[1])];
+  S.aspect = S.flightClusters.length ? (S.bounds[3] - S.bounds[2]) / (S.bounds[1] - S.bounds[0]) : 0;
+  S.duration = meta.n_samples / meta.rate_hz;
+  S.focusUnit = recall('focus.' + name) === null ? null : +recall('focus.' + name);
+  S.loading = false;
+  await applyTable(await table);
+  status('');
+  // The session opens on the first item still to decide
+  S.panelItem = null; scrollToFocus(); undecidedAfter(-1); narrow();
+}
+// `touched`: the units a label, flag, keep or undo changed. Lines that kept their kind, units and height keep their
+// canvases, moved to their new places; of these only the section headers and the lines with a touched unit are redrawn
+async function applyTable(table, touched) {
+  S.partners.clear(); S.shared.clear();
+  const floors = JSON.stringify(table.units.map(u => u.floors));
+  await Promise.all([loadAmplitudes(table.units.flatMap(u => Object.keys(u.floors).map(Number))), loadWaveforms(table.units.filter(u => u.members.length > 1).map(u => u.unit))]);
+  if (floors !== S.floors) { S.floors = floors; S.floorDraft = null; for (const cache of [S.trains, S.pairs, S.ks]) cache.clear(); }
+  S.units = table.units; S.groups = table.groups; S.nEvents = table.n_events; S.version = table.version;
+  // Possible pairs that appear after the session opened are marked new
+  S.firstPairs = S.firstPairs || new Set(S.groups.filter(g => g.section === 'possible').map(g => g.units.join('+')));
+  S.byId = new Map(S.units.map(u => [u.unit, u]));
+  S.sel = S.sel.filter(u => S.byId.has(u)); S.chosen = new Set(S.sel); S.ref = S.ref.filter(u => S.byId.has(u));
+  const before = S.lines;
+  buildLines();
+  let reuse = touched;
+  // With nothing selected, the focused line is
+  if (!S.sel.length && !S.ref.length) {
+    const line = S.lines[focusIndex()], kept = line.units.find(u => u.unit === S.focusUnit);
+    S.sel = line.type === 'tiles' ? [(kept || line.units[0]).unit] : line.units.map(u => u.unit);
+    S.chosen = new Set(S.sel); S.focusUnit = S.sel[0]; reuse = false;
+  }
+  assignColors();
+  if (!reuse) return drawAll();
+  const shape = line => `${line.type}|${line.section}|${line.h}|${line.collapsed}|${line.isNew}|${line.units.map(u => u.unit)}`;
+  const old = new Map([...S.canvases].map(([index, canvas]) => [shape(before[index]), [canvas, S.extras.get(index)]]));
+  S.canvases = new Map(); S.extras = new Map();
+  S.lines.forEach((line, index) => {
+    const kept = old.get(shape(line)), redraw = line.type === 'header' || line.units.some(u => touched.includes(u.unit));
+    // A redrawn line with buttons is made anew, so that its buttons follow its chips
+    if (!kept || (redraw && kept[1].length)) return;
+    old.delete(shape(line));
+    const [canvas, buttons] = kept;
+    canvas.dataset.index = index; S.canvases.set(index, canvas); S.extras.set(index, buttons);
+    canvas.style.top = line.y + 'px';
+    for (const button of buttons) button.style.top = line.y + +button.dataset.dy + 'px';
+    if (redraw) drawLine(line, index);
+  });
+  for (const [canvas, buttons] of old.values()) { canvas.remove(); for (const button of buttons) button.remove(); }
+  drawList(); drawPanel();
+}
+// One decision: the server saves it only if this page is up to date, and answers with the new table
+async function act(event) {
+  status('saving…');
+  S.decided = performance.now();
+  const response = await fetch('/', {method: 'POST', body: JSON.stringify({...event, session: S.name, version: S.version})});
+  const answer = await response.json();
+  if (answer.table || response.ok) await applyTable(answer.table || answer, response.ok && ['label', 'flag', 'keep', 'undo'].includes(event.kind) ? answer.touched : undefined);
+  status(response.ok ? answer.done : answer.error, !response.ok);
+  return response.ok ? answer : null;
+}
+// Select the units a decision touched and bring them on screen
+function show(ids) { const here = ids.filter(id => S.byId.has(id)); S.panelItem = null; if (here.length) { select(here, here[0]); scrollToFocus(); } }
+
+// Spike trains and correlograms, computed in the page and kept
+// Kilosort amplitude of every spike of original units, in the order of their spike trains; loaded once per unit
+async function loadAmplitudes(ids) {
+  const missing = ids.filter(id => !S.amps.has(id)), name = S.name;
+  await Promise.all(missing.map(async id => { const buffer = await fetch(`/amplitudes/${name}?unit=${id}`).then(r => r.arrayBuffer()); if (name === S.name) S.amps.set(id, new Float32Array(buffer)); }));
+}
+// Mean waveform of merged units, once per unit (a merged unit's number is never reused)
+async function loadWaveforms(ids) {
+  const missing = ids.filter(id => !S.waveforms.has(id)), name = S.name;
+  if (!missing.length) return;
+  const answer = await getJSON(`/waveforms/${name}?units=${missing.join(',')}`);
+  if (name === S.name) for (const id of missing) S.waveforms.set(id, answer[id]);
+}
+function originalTrains(u) {
+  const {spike_offset, spike_sample} = S.A;
+  return u.members.map(m => {
+    const r = S.rowOf.get(m), all = spike_sample.data.subarray(spike_offset.data[r], spike_offset.data[r + 1]);
+    // An amplitude floor leaves the spikes at or above it (the unit's amplitudes are loaded with the table)
+    if (u.floors[m] === undefined) return all;
+    const amplitude = S.amps.get(m);
+    return all.filter((_, i) => amplitude[i] >= u.floors[m]);
+  });
+}
+// Caches of trains and pair statistics are keyed by members, cleared when a floor changes
+function spikeTrain(u) {
+  const key = `${u.members}`;
+  if (!S.trains.has(key)) { const parts = originalTrains(u); S.trains.set(key, parts.length === 1 ? parts[0] : mergedTrain(parts)); }
+  return S.trains.get(key);
+}
+// Sorted union of sorted trains, then Kilosort's rule: a spike within the duplicate window of the last kept spike is dropped
+function mergedTrain(parts) {
+  let all = parts[0];
+  for (const p of parts.slice(1)) {
+    const out = new Uint32Array(all.length + p.length);
+    let i = 0, j = 0, k = 0;
+    while (i < all.length && j < p.length) out[k++] = all[i] <= p[j] ? all[i++] : p[j++];
+    out.set(all.subarray(i), k); out.set(p.subarray(j), k + all.length - i);
+    all = out;
+  }
+  const kept = new Uint32Array(all.length);
+  let n = 0, last = -Infinity;
+  for (let i = 0; i < all.length; i++) if (all[i] >= last + S.meta.duplicate_window) { last = all[i]; kept[n++] = all[i]; }
+  return kept.subarray(0, n);
+}
+// Lags b - a over +-50 ms in 1 ms bins, mirror-symmetric: a lag of d > 0 samples falls in bin 50 + floor((d - 1) / bin),
+// d < 0 in bin 49 - floor((-d - 1) / bin); exactly coincident spikes are counted apart
+function lagCounts(a, b) {
+  const bin = S.meta.rate_hz / 1000, half = 50 * bin, counts = new Int32Array(100);
+  let lo = 0, hi = 0, zero = 0;
+  for (let i = 0; i < a.length; i++) {
+    while (lo < b.length && b[lo] < a[i] - half) lo++;
+    while (hi < b.length && b[hi] <= a[i] + half) hi++;
+    for (let j = lo; j < hi; j++) {
+      const d = b[j] - a[i];
+      if (d > 0) counts[50 + Math.floor((d - 1) / bin)]++; else if (d < 0) counts[49 - Math.floor((-d - 1) / bin)]++; else zero++;
+    }
+  }
+  return {counts, zero};
+}
+function autocorrelogram(u) {
+  const key = `${u.members}`;
+  if (!S.pairs.has(key)) S.pairs.set(key, lagCounts(spikeTrain(u), spikeTrain(u)).counts);
+  return S.pairs.get(key);
+}
+// Cross-correlogram: when b fires relative to a; coincident spikes go to the first bin after zero
+function crossCorrelogram(a, b) {
+  const [lo, hi] = a.unit < b.unit ? [a, b] : [b, a], key = `${lo.members}|${hi.members}`;
+  if (!S.pairs.has(key)) S.pairs.set(key, lagCounts(spikeTrain(lo), spikeTrain(hi)));
+  const {counts, zero} = S.pairs.get(key), out = a === lo ? Int32Array.from(counts) : Int32Array.from(counts).reverse();
+  out[50] += zero;
+  return out;
+}
+// Spikes of b around each spike of a, in bins of binMs out to halfMs each side, divided by what two independent units
+// of these rates would give (1 = chance); bin k covers lags from -halfMs + k binMs
+function pairRate(a, b, halfMs, binMs) {
+  const key = `rate|${a.members}|${b.members}|${halfMs}|${binMs}`;
+  if (!S.pairs.has(key)) {
+    const ta = spikeTrain(a), tb = spikeTrain(b), ms = S.meta.rate_hz / 1000, n = Math.round(2 * halfMs / binMs), counts = new Float64Array(n);
+    let lo = 0, hi = 0;
+    for (let i = 0; i < ta.length; i++) {
+      while (lo < tb.length && tb[lo] < ta[i] - halfMs * ms) lo++;
+      while (hi < tb.length && tb[hi] < ta[i] + halfMs * ms) hi++;
+      for (let j = lo; j < hi; j++) counts[Math.floor(((tb[j] - ta[i]) / ms + halfMs) / binMs)]++;
+    }
+    const chance = ta.length * tb.length / S.duration * binMs / 1000;
+    S.pairs.set(key, counts.map(c => c / chance));
+  }
+  return S.pairs.get(key);
+}
+// Probability of a Poisson count of at most k, mean m (normal approximation above 50)
+function poissonAtMost(k, m) {
+  if (m > 50) {
+    const z = (k + 0.5 - m) / Math.sqrt(m), t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const tail = Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI) * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return z < 0 ? tail : 1 - tail;
+  }
+  let term = Math.exp(-m), sum = term;
+  for (let i = 1; i <= k; i++) { term *= m / i; sum += term; }
+  return Math.min(1, sum);
+}
+// Spike pairs with lag b - a from `from` to `to` ms (sample-exact, both ends included) and their rate per ms of lag
+function lagPairs(a, b, from, to) {
+  const ms = S.meta.rate_hz / 1000, lo = Math.ceil(from * ms), hi = Math.floor(to * ms);
+  let count = 0, start = 0, end = 0;
+  for (let i = 0; i < a.length; i++) {
+    while (start < b.length && b[start] < a[i] + lo) start++;
+    while (end < b.length && b[end] <= a[i] + hi) end++;
+    count += end - start;
+  }
+  return {count, rate: count / ((hi - lo + 1) / ms)};
+}
+// Spikes within 1 ms of each other (61 lags at 30 kHz) and the count the cross-correlogram 10-50 ms away predicts there
+function nearZero(a, b) {
+  const c = crossCorrelogram(a, b), bin = S.meta.rate_hz / 1000;
+  let shoulder = 0;
+  for (let i = 0; i < 40; i++) shoulder += c[i] + c[99 - i];
+  return {seen: c[49] + c[50], expected: shoulder * (2 * bin + 1) / (80 * bin)};
+}
+// Shared spikes: the excess within 1 ms, kept when significant (Poisson, p < 0.01) and at least 5% of the smaller unit
+function sharedSpikes(a, b) {
+  const {seen, expected} = nearZero(a, b), excess = Math.round(seen - expected), smaller = Math.min(spikeTrain(a).length, spikeTrain(b).length);
+  return 1 - poissonAtMost(seen - 1, expected) < 0.01 && excess >= 0.05 * smaller ? excess : 0;
+}
+// One pair. `ks` is Kilosort's own cross-refractory test of the two trains with the footprint correlation and the
+// hand-off (from the server; missing until it answers). In the page: the centre (0.25-1.25 ms) against the flank (2-10 ms)
+// on both sides together and on each side alone, undefined under 5 centre pairs expected; the duplicates (within 0.25
+// ms) against the flank; the spikes the two units share; and the spikes expected within 1 ms.
+function pairTest(a, b, ks) {
+  const {expected} = nearZero(a, b);
+  // A refractory dip cannot be told from chance when fewer than 3 spikes are expected there (zero seen has p = e^-expected > 0.05)
+  const verdict = !ks ? '…' : ks.verdict === 'refractory' && expected < 3 ? 'untestable' : ks.verdict;
+  // Windows
+  const ta = spikeTrain(a), tb = spikeTrain(b), key = `windows|${a.members}|${b.members}`;
+  if (!S.pairs.has(key)) S.pairs.set(key, [[-1.25, -0.25], [0.25, 1.25], [-0.25, 0.25], [-10, -2], [2, 10]].map(([from, to]) => lagPairs(ta, tb, from, to)));
+  const [centreBefore, centreAfter, duplicates, flankBefore, flankAfter] = S.pairs.get(key), flank = Math.max(flankBefore.rate, flankAfter.rate);
+  const testable = flank * 2 >= 5;
+  return {a, b, ks, verdict, expected, shared: sharedSpikes(a, b), footprint: ks ? ks.footprint : null, handoff: ks ? ks.handoff : null,
+          notch: testable ? (centreBefore.rate + centreAfter.rate) / 2 / flank : null,
+          before: testable ? centreBefore.rate / flankBefore.rate : null, after: testable ? centreAfter.rate / flankAfter.rate : null,
+          duplicateRatio: duplicates.rate / flank};
+}
+// Text broken into lines that fit a width, between words; a '·' at a break is dropped
+function wrapped(ctx, string, width, font) {
+  ctx.font = font;
+  const lines = [''];
+  for (const word of string.split(' ')) {
+    const line = lines[lines.length - 1], longer = line ? `${line} ${word}` : word;
+    if (line && ctx.measureText(longer).width > width) lines.push(word); else lines[lines.length - 1] = longer;
+  }
+  return lines.map(line => line.replace(/^· | ·$/g, ''));
+}
+// Places items of these widths left to right from x0, on a new line where one would pass `right`
+function flow(widths, x0, right) {
+  let x = x0, row = 0;
+  return widths.map(width => { if (x > x0 && x + width > right) { x = x0; row += 1; } x += width; return [x - width, row]; });
+}
+
+// All pairs of a set of units: the pairs that fail Kilosort's test first, then by the spikes expected within 1 ms
+function together(units, ksPairs) {
+  const pairs = [], first = u => Math.min(...u.members);
+  for (let a = 0; a < units.length; a++) for (let b = a + 1; b < units.length; b++) {
+    const [lo, hi] = first(units[a]) < first(units[b]) ? [units[a], units[b]] : [units[b], units[a]];
+    pairs.push(pairTest(units[a], units[b], ksPairs && ksPairs[`${first(lo)}|${first(hi)}`]));
+  }
+  pairs.sort((p, q) => (q.verdict === 'not refractory') - (p.verdict === 'not refractory') || q.expected - p.expected);
+  return {pairs};
+}
+// This tool's reading of the evidence on merging: duplicate spikes, then Kilosort's refractory test (KS4 method), then
+// the merged unit's foreign spikes; `merged` has the merged unit's numbers (rp_label undefined while they load). The word,
+// a short reason and the pair that decides it.
+function reading(pairs, merged) {
+  const dup = pairs.filter(p => p.shared).sort((p, q) => q.shared - p.shared)[0];
+  if (dup) return {word: 'merge', why: 'duplicate spikes', pair: dup};
+  if (pairs.some(p => p.verdict === '…') || merged.rp_label === undefined) return {word: '…', why: '', pair: null};
+  const failing = pairs.filter(p => p.verdict === 'not refractory'), untestable = pairs.filter(p => p.verdict === 'untestable').sort((p, q) => p.expected - q.expected);
+  if (failing.length) return {word: 'keep apart', why: 'refractory test fails', pair: failing[0]};
+  if (merged.rp_label !== 'good') return {word: 'keep apart', why: `merged ${contamination(merged)} foreign`, pair: null};
+  if (!untestable.length) return {word: 'merge', why: 'refractory test passes', pair: null};
+  return {word: 'untestable', why: untestableWhy(untestable[0]), pair: untestable[0]};
+}
+// Why the refractory test cannot decide a pair, from the numbers it uses
+const untestableWhy = p => p.expected < 3 ? `${p.expected.toFixed(1)} expected within 1 ms (needs 3)` : `dip not significant (p = ${p.ks.p.toFixed(2)})`;
+const verdictInk = word => word === 'merge' ? T.ink.good : word === 'keep apart' ? T.bad : T.text2;
+// Original units of a merged unit as units of their own, for their pairs
+const originalsOf = u => u.members.map(m => ({unit: m, members: [m], floors: u.floors[m] === undefined ? {} : {[m]: u.floors[m]}}));
+// What Kilosort would have done with a group (the sort ran unmerged)
+const KILOSORT = {'merged (template match)': 'would merge (template match)', 'kept split (refractory check overruled)': 'would keep split (refractory check)',
+                  'merged (its final merge)': 'would merge (final merge step)', 'not proposed': 'not proposed'};
+// The decision strip of a group on its units: Kilosort, Bombcell, this tool, you; each cell text parts [string, colour]
+function strip(g, units) {
+  const merged = g.if_merged, pairs = together(units.length === 1 ? originalsOf(units[0]) : units, g.pairs).pairs;
+  const similarity = `${pairs.length === 1 ? '' : '≥ '}${g.similarity.toFixed(2)}`;
+  const you = {null: 'not decided', 'merged in part so far': 'merged in part'}[decisionOf(g)] || decisionOf(g);
+  return [[['Kilosort: ', T.text2], [g.kilosort.split('; ').map(k => KILOSORT[k]).join('; '), T.text], [` (similarity ${similarity})`, T.text2]],
+          [['Bombcell if merged: ', T.text2], [word(merged.bombcell), T.ink[merged.bombcell]]],
+          [['this tool: ', T.text2], [[g.section === 'possible' ? 'found by its search' : g.proposer ? '' : 'similar waveforms', pairs.some(p => p.shared) ? 'duplicate spikes' : ''].filter(Boolean).join(', ') || '–', T.text]],
+          [['you: ', T.text2], [you, T.text]]];
+}
+// List of lines: section headers, merge groups, unit rows, tile rows. Nothing leaves the list when labelled, unless only
+// what remains is shown (S.remaining)
+function openGroup(g) { return !g.kept && g.units.length > 1 && (g.section === 'possible' ? g.units.every(id => !unitOf(id).label) : g.units.some(id => !unitOf(id).label)); }
+// The four decisions in one flowing run of text parts
+const stripParts = (g, units) => strip(g, units).flatMap((parts, k) => k ? [['   ·   ', T.text2], ...parts] : parts);
+// The curator's decision on a group, in words; null while open with nothing merged
+function decisionOf(g) {
+  const some = g.units.some(id => unitOf(id).members.length > 1);
+  return g.units.length === 1 ? 'merged' : openGroup(g) ? (some ? 'merged in part so far' : null) : some ? 'merged in part' : 'kept apart';
+}
+function buildLines() {
+  if (S.remaining && !S.done) S.done = {units: new Set(S.units.filter(u => u.label).map(u => u.unit)), groups: new Set(S.groups.filter(g => !openGroup(g) && g.units.every(id => unitOf(id).label)).map(g => g.units.join('+')))};
+  const perLine = Math.max(1, Math.floor(list.clientWidth / TILE_MIN)), lines = [];
+  S.tileW = list.clientWidth / perLine;
+  // A tile's three contamination measures on one line, or two when the tile is narrow
+  measure.font = '600 13px system-ui';
+  S.tileWrap = measure.measureText('foreign 100% KS ratio 0.00 short ISI 0.00%').width + 30 > S.tileW - 24;
+  S.tileH = TILE_H + (S.tileWrap ? 18 : 0);
+  const byDepth = (a, b) => b.depth - a.depth, shown = u => !S.remaining || !S.done.units.has(u.unit);
+  // The focused line's place, kept while a decision hides it
+  const old = S.lines[focusIndex()];
+  S.focusY = old ? old.y : 0;
+  if (document.getElementById('depth').checked) {
+    [...S.units].sort(byDepth).filter(shown).forEach((u, k) => lines.push({type: 'unit', units: [u], h: ROW + (k === 0 ? AXIS_H : 0), axis: k === 0}));
+  } else {
+    for (const [section, title] of SECTIONS) {
+      const members = S.units.filter(u => u.section === section).sort(byDepth), left = members.filter(u => !u.label).length;
+      const groups = S.groups.filter(g => g.section === section), open = groups.filter(openGroup);
+      if (section === 'non_soma' && !members.length) continue;
+      // Merge groups: open groups by proposer, adding up to those left
+      const theirs = open.filter(g => g.proposer).length;
+      const count = section === 'groups' ? `${open.length} to review (Kilosort ${theirs} · this tool ${open.length - theirs})` : section === 'possible' ? `${open.length} to review` : `${left} to review`;
+      lines.push({type: 'header', section, units: [], h: HEAD, title, count, accept: !['groups', 'possible', 'uncertain', 'non_soma'].includes(section)});
+      // A group's header: its units and the decision strip in four cells over the plot columns (up to three lines each,
+      // two when wide), then the scales its rows share; a possible pair kept apart is its header alone
+      if (section === 'groups' || section === 'possible') for (const g of groups.filter(g => !S.remaining || !S.done.groups.has(g.units.join('+')))) {
+        // TODO only: a decided group shows only its units still to label
+        const units = g.units.map(unitOf).filter(u => !S.remaining || openGroup(g) || !S.done.units.has(u.unit)), collapsed = section === 'possible' && g.kept;
+        const title = g.units.length === 1 ? `${units[0].members.join(' + ')} → ${units[0].unit}` : g.units.join(' + ');
+        const titleLines = wrapped(measure, title, TEXT_W - 30, 'bold 15px system-ui');
+        const stripLines = drawParts(measure, stripParts(g, g.units.map(unitOf)), 12, 0, list.clientWidth - 24, '600 13px system-ui', false, 17);
+        const head = 8 + 17 * (titleLines.length + stripLines) + (collapsed ? 4 : 20);
+        lines.push({type: 'group', group: g, units, title: titleLines, head, collapsed, isNew: section === 'possible' && units.length === 2 && !g.kept && !S.firstPairs.has(g.units.join('+')),
+                    h: collapsed ? head : head + ROW * units.length + AXIS_H});
+      }
+      else if (section === 'uncertain') members.filter(shown).forEach((u, k) => lines.push({type: 'unit', section, units: [u], h: ROW + (k === 0 ? AXIS_H : 0), axis: k === 0}));
+      else {
+        const tiles = members.filter(shown);
+        for (let i = 0; i < tiles.length; i += perLine) lines.push({type: 'tiles', section, units: tiles.slice(i, i + perLine), h: S.tileH + (i ? 0 : AXIS_H), axis: !i});
+      }
+    }
+  }
+  let y = 0;
+  for (const line of lines) { line.y = y; y += line.h; }
+  S.lines = lines;
+  spacer.style.height = y + 'px';
+  // Outcome per label (the curator's label, else the proposal), then what is left to review (links)
+  const outcome = LABELS.map(label => [label, S.units.filter(u => (u.label || u.proposed) === label).length]);
+  document.getElementById('outcome').innerHTML = 'outcome:' + outcome.map(([label, n]) => `<i style="background:${T.shade[label]};outline:1px solid ${T.ink[label]}"></i>${word(label)} <b>${n}</b>`).join(' ');
+  const busy = new Set(S.groups.filter(openGroup).flatMap(g => g.units));
+  const open = section => S.groups.filter(g => g.section === section && openGroup(g)).length, units = S.units.filter(u => !u.label && !busy.has(u.unit)).length;
+  const flagged = S.units.filter(u => u.flagged).length;
+  const parts = [[open('groups'), 'groups', 'data-section="groups"'], [open('possible'), 'pairs', 'data-section="possible"'], [units, 'units', 'data-units="1"']].filter(([n]) => n)
+    .map(([n, name, link]) => `<a ${link}><b>${n.toLocaleString()}</b> ${name}</a>`).concat(flagged ? [`<a data-flagged="1">flagged <b>${flagged}</b></a>`] : []);
+  document.getElementById('left').innerHTML = parts.length ? 'to review: ' + parts.join(' · ') : '<b>nothing left to review — ready to export</b>';
+}
+// Focus is kept as a unit id, so it survives rebuilding the list; a focus that a decision hid (remaining only) is the
+// line now at its place
+const focusShown = () => S.lines.some(line => line.units.some(u => u.unit === S.focusUnit));
+function focusIndex() {
+  const index = S.lines.findIndex(line => line.units.some(u => u.unit === S.focusUnit));
+  if (index >= 0) return index;
+  const at = S.lines.findIndex(line => line.type !== 'header' && line.y >= (S.focusY || 0));
+  return at >= 0 ? at : Math.max(0, S.lines.findLastIndex(line => line.type !== 'header'));
+}
+function scrollToFocus() {
+  const line = S.lines[focusIndex()];
+  if (line.y < list.scrollTop || line.y + line.h > list.scrollTop + list.clientHeight) list.scrollTop = line.y - 60;
+  drawList();
+}
+// Colours: a selected unit takes the colour of its place in its merge group, others the next free colour;
+// units shown only for reference are grey
+function assignColors() {
+  const colors = new Map();
+  if (S.sel.length + S.ref.length > 1) for (const id of S.sel) {
+    const line = S.lines.find(l => l.type === 'group' && l.units.some(u => u.unit === id));
+    const want = line && line.units.length > 1 ? T.colors[line.units.findIndex(u => u.unit === id) % T.colors.length] : null;
+    colors.set(id, want && ![...colors.values()].includes(want) ? want : T.colors.find(c => ![...colors.values()].includes(c)) || T.colors[colors.size % T.colors.length]);
+  }
+  for (const id of S.ref) colors.set(id, T.ref);
+  S.colors = colors;
+}
+function colorOf(u, line) {
+  if (S.colors.has(u.unit)) return S.colors.get(u.unit);
+  return line.type === 'group' && line.units.length > 1 ? T.colors[line.units.indexOf(u) % T.colors.length] : T.trace;
+}
+function updateButtons() {
+  document.getElementById('merge').disabled = S.sel.length < 2;
+}
+// What a line looks like under a selection: per unit row or tile, and for a section header the units of it selected
+function looks(line) {
+  if (line.type === 'header') return [S.lines.filter(l => l.section === line.section && l.type === 'tiles').flatMap(l => l.units).filter(u => S.chosen.has(u.unit)).length];
+  const part = line.type === 'group' && !line.collapsed && line.units.some(v => !S.chosen.has(v.unit));
+  return line.units.map(u => `${S.chosen.has(u.unit)}|${S.ref.includes(u.unit)}|${colorOf(u, line)}|${part && u.unit === S.focusUnit}`);
+}
+// Select units; only the rows, tiles and headers whose look changes are redrawn
+function select(ids, focus) {
+  const before = new Map([...S.canvases.keys()].map(index => [index, looks(S.lines[index])]));
+  S.sel = ids; S.chosen = new Set(ids); S.ref = []; S.posOnly = null; S.showPositions = false;
+  if (focus === undefined && ids.length && !ids.includes(S.focusUnit)) focus = ids[0];
+  if (focus !== undefined) { S.focusUnit = focus; remember('focus.' + S.name, focus); }
+  assignColors();
+  for (const [index, old] of before) {
+    const line = S.lines[index], now = looks(line), changed = now.map((look, k) => look !== old[k] ? k : -1).filter(k => k >= 0);
+    if (!changed.length) continue;
+    if (line.type === 'group' && !line.collapsed && !groupScales(line).overrun) for (const k of changed) groupRow(S.canvases.get(index).getContext('2d'), line, k, false);
+    else drawLine(line, index);
+  }
+  drawPanel();
+}
+// Reference units change; only the lines whose look changes are redrawn
+function setReferences(ids) {
+  const touched = new Set([...S.ref, ...ids, ...S.sel]);
+  S.ref = ids;
+  assignColors();
+  S.lines.forEach((line, index) => { if (S.canvases.has(index) && line.units.some(u => touched.has(u.unit))) drawLine(line, index); });
+  drawPanel();
+}
+function selectLine(index, column) {
+  const line = S.lines[index];
+  const ids = line.type === 'tiles' ? [line.units[Math.min(column || 0, line.units.length - 1)].unit] : line.units.map(u => u.unit);
+  select(ids, ids[0]);
+}
+function moveFocus(step, sideways) {
+  const index = focusIndex(), line = S.lines[index];
+  // After browsing with the wheel: forward to the first item whose top is in view, back to the last item in view
+  if (!onScreen(line)) {
+    const inView = S.lines.filter(l => l.type !== 'header' && onScreen(l));
+    const target = step > 0 ? inView.find(l => l.y >= list.scrollTop) || inView[0] : inView[inView.length - 1];
+    selectLine(S.lines.indexOf(target), step > 0 ? 0 : Infinity);
+    return scrollToFocus();
+  }
+  // A focus that a decision hid: forward is the line now at its place
+  if (!focusShown() && step > 0) { selectLine(index, 0); return scrollToFocus(); }
+  const column = line.type === 'tiles' ? line.units.findIndex(u => u.unit === S.focusUnit) : 0;
+  if (sideways && line.type === 'tiles' && column + step >= 0 && column + step < line.units.length) return selectLine(index, column + step);
+  let i = index + step;
+  while (i >= 0 && i < S.lines.length && S.lines[i].type === 'header') i += step;
+  if (i < 0 || i >= S.lines.length) return;
+  selectLine(i, sideways ? (step > 0 ? 0 : Infinity) : column);
+  scrollToFocus();
+}
+// The next item still to decide: a unit without a label in the focused group (after a decision there), then the next
+// open merge group (selected whole) or unit without a label
+function nextUndecided(sameLineFirst) {
+  const focused = focusIndex(), line = S.lines[focused];
+  // After browsing with the wheel, the search starts at the first line in view; a hidden focus, at the line at its place
+  const start = !onScreen(line) ? S.lines.findIndex(l => l.y >= list.scrollTop) - 1 : focusShown() ? focused : focused - 1;
+  if (sameLineFirst && onScreen(line) && line.type === 'group' && openGroup(line.group)) {
+    const here = line.units.find(u => !u.label);
+    if (here) return select([here.unit], here.unit);
+  }
+  undecidedAfter(start);
+}
+// The first open merge group (selected whole) or unit without a label after line `start`, round the list
+function undecidedAfter(start) {
+  for (let step = 1; step <= S.lines.length; step++) {
+    const index = (start + step) % S.lines.length, next = S.lines[index];
+    if (next.type === 'group' && openGroup(next.group)) { selectLine(index); return scrollToFocus(); }
+    const u = next.units.find(v => !v.label);
+    if (u && next.type !== 'header') { select([u.unit], u.unit); return scrollToFocus(); }
+  }
+  status('nothing left to decide: every unit has a label');
+}
+
+// Drawing
+function setup(canvas, w, h) {
+  const scale = window.devicePixelRatio || 1;
+  canvas.width = w * scale; canvas.height = h * scale; canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  return ctx;
+}
+function clipped(ctx, x, y, w, h, draw) { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); draw(); ctx.restore(); }
+function text(ctx, string, x, y, font, color, align) { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.fillText(string, x, y); ctx.textAlign = 'left'; }
+// A label on a pad of the background colour, so data under it does not hide it
+function padded(ctx, string, x, y, align) {
+  ctx.font = '13px system-ui'; const w = ctx.measureText(string).width + 6, left = align === 'right' ? x - w : x;
+  ctx.fillStyle = T.bg; ctx.globalAlpha = 0.8; ctx.fillRect(left, y - 13, w, 16); ctx.globalAlpha = 1;
+  text(ctx, string, left + 3, y, '13px system-ui', T.text2);
+}
+// Waveform of a unit as traces on sites: its own mean, or the merged mean the server sends
+function traceOf(u) {
+  const nt = S.A.waveform.shape[1], nc = S.A.waveform.shape[2], row = u.members.length === 1 ? S.rowOf.get(u.unit) : u.site_row;
+  const value = u.members.length === 1 ? (t, c) => S.A.waveform.data[(row * nt + t) * nc + c] : (t, c) => S.waveforms.get(u.unit)[t][c];
+  return {value, site: c => [S.A.site_xy.data[(row * nc + c) * 2], S.A.site_xy.data[(row * nc + c) * 2 + 1]], nt, nc};
+}
+function tracePeak(trace) {
+  let peak = 0;
+  for (let c = 0; c < trace.nc; c++) if (!Number.isNaN(trace.site(c)[0])) for (let t = 0; t < trace.nt; t++) peak = Math.max(peak, Math.abs(trace.value(t, c)));
+  return peak;
+}
+// `shared`: traces of the units on one common set of sites (the panel's overlay), in place of each unit's own 16.
+// Sites of all the units on one grid and one amplitude scale (at least 30 uV full scale; `peak` shares a scale between plots);
+// with `scale`, a gutter left of the sites for the scale bar ('panel': an L of 1 ms and N µV, and a depth axis); `fit`
+// (the panel): the top row of sites one row pitch under the top
+function siteGrid(ctx, units, x, y, w, h, nSites, peak, gridUnits, shared, zoom, scale, fit) {
+  const traces = units.map(u => { const trace = (shared && shared.get(u.unit)) || traceOf(u); return {...trace, nc: nSites || trace.nc}; });
+  let xs = [], ys = [];
+  for (const trace of (gridUnits ? gridUnits.map(traceOf) : traces)) for (let c = 0; c < (nSites || trace.nc); c++) if (!Number.isNaN(trace.site(c)[0])) { xs.push(trace.site(c)[0]); ys.push(trace.site(c)[1]); }
+  const top = Math.max(30, peak || Math.max(...traces.map(tracePeak)));
+  const columns = [...new Set(xs)].sort((a, b) => a - b), rows = [...new Set(ys)].sort((a, b) => a - b);
+  const rowH = h / (rows.length + (fit ? 0.9 : 1.4)), gain = (zoom || 1) * Math.min(1.5 * rowH, 0.45 * h) / top;
+  const uV = [20, 50, 100, 200, 500, 1000].find(v => v * gain > 18) || 1000;
+  ctx.font = '13px system-ui';
+  const gutter = scale === 'panel' ? ctx.measureText(`${Math.round(rows[rows.length - 1])} µm`).width + 30 : scale === 'bare' ? 8 : scale ? ctx.measureText(`${uV} µV`).width + 10 : 0;
+  const left = x + gutter, colW = (w - gutter) / columns.length;
+  return {traces, gain, colW, rowH, rows, bar: {uV, x: left - 3},
+          has: site => columns.includes(site[0]) && rows.includes(site[1]),
+          base: row => y + h - (row + 0.9) * rowH,
+          cell: site => [left + columns.indexOf(site[0]) * colW + colW * 0.07, y + h - (rows.indexOf(site[1]) + 0.9) * rowH]};
+}
+function strokeTraces(ctx, grid, colors, width, dashed) {
+  grid.traces.forEach((trace, k) => {
+    ctx.strokeStyle = colors[k]; ctx.lineWidth = width; ctx.setLineDash(dashed && dashed[k] ? [4, 3] : []); ctx.beginPath();
+    for (let c = 0; c < trace.nc; c++) {
+      if (Number.isNaN(trace.site(c)[0]) || trace.value(0, c) === null) continue;
+      const [cx, cy] = grid.cell(trace.site(c));
+      for (let t = 0; t < trace.nt; t++) {
+        const px = cx + t / (trace.nt - 1) * grid.colW * 0.86, py = cy - trace.value(t, c) * grid.gain;
+        t ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+    }
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+}
+// options: scale (draw a scale bar), sites (how many sites), dashed, peak (shared full scale in uV), gridUnits (units whose sites
+// lay out the grid), shared (traces on common sites)
+function drawWaveforms(ctx, units, colors, x, y, w, h, options = {}) {
+  const grid = siteGrid(ctx, units, x, y, w, h, options.sites, options.peak, options.gridUnits, options.shared, options.zoom, options.scale, options.fit);
+  options.clip ? clipped(ctx, x, y, w, h, () => strokeTraces(ctx, grid, colors, 1.2, options.dashed)) : strokeTraces(ctx, grid, colors, 1.2, options.dashed);
+  if (options.scale && options.bar !== false) scaleBar(ctx, grid, y + h, options.scale);
+}
+// Density of the single spikes of each unit on its largest sites, with the mean on top, at the scale of the mean view
+function drawDensity(ctx, units, colors, x, y, w, h, options = {}) {
+  const grid = siteGrid(ctx, units, x, y, w, h, DENSITY_SITES, options.peak, undefined, undefined, options.zoom, options.scale, options.fit), [, , nt, na] = S.A.density.shape, nc = S.A.density.shape[1];
+  const largest = Math.max(...units.flatMap(u => u.members.map(m => S.A.density_count.data[S.rowOf.get(m)])));
+  clipped(ctx, x, y, w, h, () => {
+    units.forEach((u, k) => {
+      ctx.fillStyle = colors[k];
+      for (const member of u.members) {
+        const row = S.rowOf.get(member), range = S.A.density_range.data[row], cellH = Math.max(1, 2 * range / na * grid.gain);
+        const weight = S.A.density_count.data[row] / largest;
+        for (let c = 0; c < DENSITY_SITES; c++) {
+          const sx = S.A.site_xy.data[(row * nc + c) * 2];
+          if (Number.isNaN(sx) || !grid.has([sx, S.A.site_xy.data[(row * nc + c) * 2 + 1]])) continue;
+          const [cx, cy] = grid.cell([sx, S.A.site_xy.data[(row * nc + c) * 2 + 1]]);
+          for (let t = 0; t < nt; t++) for (let a = 0; a < na; a++) {
+            const d = S.A.density.data[((row * nc + c) * nt + t) * na + a];
+            if (!d) continue;
+            ctx.globalAlpha = (0.08 + 0.85 * d / 255) * weight;
+            ctx.fillRect(cx + t / nt * grid.colW * 0.86, cy - ((a + 1) / na * 2 - 1) * range * grid.gain, grid.colW * 0.86 / nt + 0.4, cellH);
+          }
+        }
+      }
+    });
+    ctx.globalAlpha = 1;
+    strokeTraces(ctx, grid, units.map(() => T.bg), 3.5);
+    strokeTraces(ctx, grid, colors, 1.5, options.dashed);
+  });
+  if (options.scale) scaleBar(ctx, grid, y + h, options.scale);
+}
+// Single-spike traces of original units (rows), from the server once per row
+function loadTraces(rows) {
+  const missing = rows.filter(row => !S.traceAsks.has(row)), name = S.name, [ns, nt, nc] = S.meta.traces_shape;
+  if (missing.length) {
+    const asked = fetch(`/traces/${name}?rows=${missing.join(',')}`).then(r => r.arrayBuffer()).then(buffer => {
+      if (name === S.name) missing.forEach((row, k) => S.traces.set(row, new Int16Array(buffer, k * ns * nt * nc * 2, ns * nt * nc)));
+    });
+    for (const row of missing) S.traceAsks.set(row, asked);
+  }
+  return Promise.all(rows.map(row => S.traceAsks.get(row)));
+}
+// Footprints of units, from the server once per set of units and version
+function loadFootprints(ids) {
+  const footprintKey = `${ids.join(',')}|${S.version}`, name = S.name;
+  if (!S.footprintAsks.has(footprintKey)) S.footprintAsks.set(footprintKey, getJSON(`/footprints/${name}?units=${ids.join(',')}`).then(answer => { if (name === S.name) S.footprints.set(footprintKey, answer); }));
+  return S.footprintAsks.get(footprintKey);
+}
+// Single spikes of each unit (every fifth of its 500, so 100) as thin traces on all its sites, with the mean on top;
+// the traces come from the server once per unit
+function spikeCount(row) { return Math.min(S.meta.traces_shape[0], Math.ceil(S.A.density_count.data[row] / 5)); }
+function drawSpikes(ctx, units, colors, x, y, w, h, options = {}) {
+  const grid = siteGrid(ctx, units, x, y, w, h, undefined, options.peak, undefined, undefined, options.zoom, options.scale, options.fit), [ns, nt, nc] = S.meta.traces_shape;
+  const rows = units.flatMap(u => u.members.map(m => S.rowOf.get(m))), key = S.panelKey;
+  if (rows.some(row => !S.traces.has(row))) loadTraces(rows).then(() => { if (S.panelKey === key) drawPanel(['waveforms']); });
+  // Spike i of each unit in turn, so that no unit is buried under another
+  const drawn = units.flatMap((u, k) => u.members.map(m => [S.rowOf.get(m), colors[k]])).filter(([row]) => S.traces.get(row));
+  clipped(ctx, x, y, w, h, () => {
+    ctx.lineWidth = 0.8; ctx.globalAlpha = 0.1;
+    for (let i = 0, most = Math.max(0, ...drawn.map(([row]) => spikeCount(row))); i < most; i++) for (const [row, color] of drawn) {
+      if (i >= spikeCount(row)) continue;
+      const data = S.traces.get(row);
+      ctx.strokeStyle = color; ctx.beginPath();
+      for (let c = 0; c < nc; c++) {
+        const site = [S.A.site_xy.data[(row * nc + c) * 2], S.A.site_xy.data[(row * nc + c) * 2 + 1]];
+        if (Number.isNaN(site[0]) || !grid.has(site)) continue;
+        const [cx, cy] = grid.cell(site);
+        for (let t = 0; t < nt; t++) {
+          const px = cx + t / (nt - 1) * grid.colW * 0.86, py = cy - data[(i * nt + t) * nc + c] * grid.gain;
+          t ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    strokeTraces(ctx, grid, units.map(() => T.bg), 3.5);
+    strokeTraces(ctx, grid, colors, 1.5, options.dashed);
+  });
+  if (options.scale) scaleBar(ctx, grid, y + h, options.scale);
+}
+// Scale bar: in rows, N µV beside it in the gutter left of the sites (none in a group's rows, whose header says it); in
+// the panel an L of 1 ms and N µV inside the plot at its bottom left, and a depth axis with 3 ticks in the gutter
+function scaleBar(ctx, grid, bottom, kind) {
+  const {uV, x} = grid.bar, panel = kind === 'panel', left = panel ? x + 8 : x, top = bottom - 4 - uV * grid.gain;
+  ctx.strokeStyle = T.text2; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, bottom - 4);
+  if (panel) ctx.lineTo(left + S.meta.rate_hz / 1000 / (grid.traces[0].nt - 1) * grid.colW * 0.86, bottom - 4);
+  ctx.stroke();
+  if (kind === 'bare') return;
+  if (!panel) return text(ctx, `${uV} µV`, x - 5, bottom - 4, '13px system-ui', T.text2, 'right');
+  text(ctx, `1 ms, ${uV} µV`, left + 6, top + 4, '12px system-ui', T.text2);
+  const ticks = [0, Math.floor((grid.rows.length - 1) / 2), grid.rows.length - 1];
+  ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - 1, grid.base(0)); ctx.lineTo(x - 1, grid.base(grid.rows.length - 1)); ctx.stroke();
+  for (const row of ticks) text(ctx, `${Math.round(grid.rows[row])}`, x - 5, grid.base(row) + 4, '12px system-ui', T.text2, 'right');
+  ctx.save(); ctx.translate(x - 38, (grid.base(0) + grid.base(grid.rows.length - 1)) / 2); ctx.rotate(-Math.PI / 2); text(ctx, 'depth (µm)', 0, 0, '12px system-ui', T.text2, 'center'); ctx.restore();
+}
+// Correlogram bars on a value axis from 0 to `top` (default: the tallest bin); options: ticks (x labels and their place,
+// 0 to 1), yTicks (labels of 0 and the top, left of the frame), shared (a zero-lag peak of shared spikes goes past the
+// top, marked ▲, the other bins on the scale)
+function drawBars(ctx, values, color, x, y, w, h, options = {}) {
+  const n = values.length, peak = values.indexOf(Math.max(...values)), spike = options.shared && (peak === n / 2 - 1 || peak === n / 2);
+  const top = options.top || Math.max(1e-9, ...values.filter((_, i) => !spike || i !== peak)), mid = x + w / 2;
+  ctx.fillStyle = T.band; ctx.fillRect(mid - w / n, y, 2 * w / n, h);
+  ctx.fillStyle = color;
+  for (let i = 0; i < n; i++) { const bar = Math.min(values[i] / top * h, h + 4); ctx.fillRect(x + i * w / n, y + h - bar, w / n + 0.5, bar); }
+  ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  if (spike) text(ctx, '▲', x + (peak + 0.5) * w / n, y - 1, '10px system-ui', color, 'center');
+  if (options.ticks) options.ticks.forEach(([label, at]) => text(ctx, label, x + at * w, y + h + 13, '12px system-ui', T.text2, at === 0 ? 'left' : at === 1 ? 'right' : 'center'));
+  if (options.yTicks) { text(ctx, options.yTicks[1], x - 4, y + 10, '11px system-ui', T.text2, 'right'); text(ctx, options.yTicks[0], x - 4, y + h, '11px system-ui', T.text2, 'right'); }
+}
+// Lags ±50 ms of a correlogram's bins, every 50 ms
+const LAG_TICKS = [['−50', 0], ['0', 0.5], ['50 ms', 1]];
+// A number for an axis: two significant digits
+const axisNumber = v => v >= 100 ? v.toFixed(0) : `${+v.toPrecision(2)}`;
+// Broken value axis over y to y + h, from `low`: the lower 85% up to the largest 99.5th percentile of the `counted` value
+// sets (those of units Bombcell does not propose as noise), a strip above it with every larger value of `sorted`, drawn
+// only when the largest value is over 3 times that; without it the axis goes up to the largest value
+function brokenAxis(sorted, counted, low, y, h) {
+  const percentile = v => v[Math.ceil(0.995 * v.length) - 1];
+  const top = Math.max(...sorted.map(v => v[v.length - 1])), cut = Math.max(...counted.map(percentile)), strip = top > 3 * cut;
+  const high = strip ? cut : top, stripH = strip ? Math.round(0.15 * h) - 3 : 0, lowY = strip ? y + stripH + 3 : y, lowH = y + h - lowY;
+  return {low, high, top, strip, y, stripH, lowY, lowH,
+          toY: v => v <= high ? lowY + lowH - 2 - (v - low) / (high - low) * (lowH - 3) : y + stripH - 2 - (v - high) / (top - high) * (stripH - 3),
+          fromY: py => low + (lowY + lowH - 2 - py) / (lowH - 3) * (high - low)};
+}
+// Frames of a broken axis from x, with the gap mark between the strip and the axis below
+function axisFrames(ctx, axis, x, w) {
+  ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, axis.lowY + 0.5, w - 1, axis.lowH - 1);
+  if (!axis.strip) return;
+  ctx.strokeRect(x + 0.5, axis.y + 0.5, w - 1, axis.stripH - 1);
+  ctx.beginPath(); for (const gx of [x, x + w]) { ctx.moveTo(gx - 4, axis.lowY + 1); ctx.lineTo(gx + 4, axis.lowY - 4); } ctx.stroke();
+}
+// Amplitudes (µV) of the 400 spikes of each original unit of these units
+function amplitudeValues(units) {
+  const a = S.A.amplitude.data, n = S.A.amplitude.shape[1];
+  return units.flatMap(u => u.members).map(m => {
+    const values = [];
+    for (let i = 0, r = S.rowOf.get(m); i < n; i++) if (!Number.isNaN(a[(r * n + i) * 2])) values.push(Math.abs(a[(r * n + i) * 2 + 1]));
+    return Float32Array.from(values).sort();
+  });
+}
+// The amplitude value sets of these units and of those not proposed noise (all when every one is), for brokenAxis
+function amplitudeSets(units) {
+  const neurons = units.filter(u => u.proposed !== 'noise');
+  return {sorted: amplitudeValues(units), counted: amplitudeValues(neurons.length ? neurons : units)};
+}
+// Amplitude of sampled spikes (400 per original unit) over the session, on a broken axis from 0 µV over the value sets
+// `sets` (the rows of a group share them); `labels`: 0, the top with its unit and the break value in a gutter left of
+// the frame; `ticks`: the session's minutes under it; `fraction`: the same share of every unit's spikes, so that the
+// density shows the rate
+function drawAmplitude(ctx, units, colors, x, y, w, h, options) {
+  const a = S.A.amplitude.data, n = S.A.amplitude.shape[1], {spike_offset} = S.A, axis = brokenAxis(options.sets.sorted, options.sets.counted, 0, y, h);
+  const labels = !options.labels ? [] : [[`${axis.top.toFixed(0)} µV`, y + 10], ['0', y + h]].concat(axis.strip ? [[axis.high.toFixed(0), axis.lowY + 10]] : []);
+  ctx.font = '12px system-ui';
+  const gutter = labels.length ? Math.max(...labels.map(([label]) => ctx.measureText(label).width)) + 7 : 0, fx = x + gutter, fw = w - gutter;
+  // Each original unit's sampled spikes, and the share of its spikes they are
+  const sampled = m => { const r = S.rowOf.get(m), kept = []; for (let i = 0; i < n; i++) if (!Number.isNaN(a[(r * n + i) * 2])) kept.push(i); return kept; };
+  const spikes = m => spike_offset.data[S.rowOf.get(m) + 1] - spike_offset.data[S.rowOf.get(m)];
+  const share = options.fraction ? Math.min(...units.flatMap(u => u.members).map(m => sampled(m).length / spikes(m))) : 1;
+  // References first, under the selected units
+  const hollow = options.hollow || [], order = [...units.keys()].sort((i, j) => !hollow[i] - !hollow[j]);
+  order.forEach(k => {
+    ctx.fillStyle = ctx.strokeStyle = colors[k]; ctx.lineWidth = 0.8;
+    for (const m of units[k].members) {
+      const kept = sampled(m), r = S.rowOf.get(m), drawn = options.fraction ? Math.round(share * spikes(m)) : kept.length;
+      for (let j = 0; j < drawn; j++) {
+        const i = kept[Math.floor(j * kept.length / drawn)], px = fx + a[(r * n + i) * 2] / S.duration * (fw - 3), py = axis.toY(Math.abs(a[(r * n + i) * 2 + 1]));
+        hollow[k] ? ctx.strokeRect(px, py, 2.4, 2.4) : ctx.fillRect(px, py, 1.8, 1.8);
+      }
+    }
+  });
+  axisFrames(ctx, axis, fx, fw);
+  labels.forEach(([label, ly]) => text(ctx, label, fx - 4, ly, '12px system-ui', T.text2, 'right'));
+  if (options.ticks) { text(ctx, '0', fx, y + h + 13, '12px system-ui', T.text2); text(ctx, `${(S.duration / 60).toFixed(0)} min`, fx + fw, y + h + 13, '12px system-ui', T.text2, 'right'); }
+}
+// The frame of one flight path's map in a box w x h at x, y: its own path's bounding box plus 5%, at equal aspect
+function mapFrame(flightCluster, x, y, w, h) {
+  if (!S.mapBoxes.has(flightCluster)) {
+    const path = S.meta.paths[flightCluster].filter(p => p[0] !== null), xs = path.map(p => p[0]), ys = path.map(p => p[1]);
+    S.mapBoxes.set(flightCluster, [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]);
+  }
+  const [x0, x1, y0, y1] = S.mapBoxes.get(flightCluster), scale = Math.min(w / (1.1 * (x1 - x0)), h / (1.1 * (y1 - y0))), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  return {scale, toX: v => x + w / 2 + (v - cx) * scale, toY: v => y + h / 2 - (v - cy) * scale};
+}
+// A map's box: a 1 px frame, and on the first map a 1 m scale bar at its bottom left
+function mapBox(ctx, frame, x, y, w, h, first) {
+  ctx.strokeStyle = T.rule; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  if (!first) return;
+  ctx.strokeStyle = T.text; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 6, y + h - 6); ctx.lineTo(x + 6 + frame.scale, y + h - 6); ctx.stroke();
+  text(ctx, '1 m', x + 6, y + h - 10, '12px system-ui', T.text2);
+}
+// A rate map on its flight path's frame, bins hardly flown left empty; returns the top of its colour scale
+function jet(v) {
+  const c = x => Math.round(255 * Math.min(1, Math.max(0, 1.5 - Math.abs(4 * v - x))));
+  return `rgb(${c(3)},${c(2)},${c(1)})`;
+}
+function drawRateMap(ctx, map, frame, x, y, w, h) {
+  const [ny, nx] = S.rateGrid.shape, [ex0, ex1, , ey1] = S.rateGrid.extent, size = (ex1 - ex0) / nx;
+  // Colour scale of this map alone: 0 to the 99th percentile of its bins
+  const rates = map.filter(v => v !== null).sort((a, b) => a - b), peak = rates[Math.ceil(0.99 * rates.length) - 1];
+  clipped(ctx, x, y, w, h, () => {
+    for (let row = 0; row < ny; row++) for (let col = 0; col < nx; col++) {
+      const v = map[row * nx + col];
+      if (v === null) continue;
+      ctx.fillStyle = jet(peak ? Math.min(1, v / peak) : 0);
+      ctx.fillRect(frame.toX(ex0 + col * size), frame.toY(ey1 - row * size), size * frame.scale + 0.5, size * frame.scale + 0.5);
+    }
+  });
+  return peak;
+}
+// Flight paths of one flight cluster on its frame, drawn once per size and reused
+function pathImage(flightCluster, w, h) {
+  const key = `${flightCluster}|${Math.round(w)}|${Math.round(h)}|${T === THEMES.dark}`;
+  if (!S.paths.has(key)) {
+    const canvas = document.createElement('canvas'), ctx = setup(canvas, Math.ceil(w), Math.ceil(h)), frame = mapFrame(flightCluster, 0, 0, w, h);
+    ctx.strokeStyle = T.path; ctx.lineWidth = 0.6; ctx.beginPath();
+    let pen = false;
+    for (const p of S.meta.paths[flightCluster]) {
+      if (p[0] === null) { pen = false; continue; }
+      pen ? ctx.lineTo(frame.toX(p[0]), frame.toY(p[1])) : ctx.moveTo(frame.toX(p[0]), frame.toY(p[1]));
+      pen = true;
+    }
+    ctx.stroke();
+    S.paths.set(key, canvas);
+  }
+  return S.paths.get(key);
+}
+function drawPosition(ctx, flightCluster, units, colors, x, y, w, h, options) {
+  const frame = mapFrame(flightCluster, x, y, w, h);
+  ctx.drawImage(pathImage(flightCluster, w, h), x, y, Math.ceil(w), Math.ceil(h));
+  const xy = S.A.position_xy.data, fc = S.A.position_cluster.data, off = S.A.position_offset.data;
+  units.forEach((u, k) => {
+    // Marker size and opacity fall with the unit's spikes on all flight clusters, so the ink per map stays about the
+    // same: full size and opacity up to 1,500 spikes on a 200 px map
+    const n = u.members.reduce((sum, m) => sum + off[S.rowOf.get(m) + 1] - off[S.rowOf.get(m)], 0);
+    const thin = Math.min(1, 1500 * (w / 200) ** 2 / Math.max(n, 1)), size = Math.max(1.5, 2.4 * Math.min(1.4, Math.max(0.5, w / 200)) * thin ** 0.25);
+    ctx.fillStyle = ctx.strokeStyle = colors[k]; ctx.lineWidth = 0.8; ctx.globalAlpha = Math.max(0.25, 0.75 * thin ** 0.5);
+    for (const member of u.members) {
+      const r = S.rowOf.get(member);
+      for (let i = off[r]; i < off[r + 1]; i++) if (fc[i] == flightCluster) {
+        const px = frame.toX(xy[i * 2]) - size / 2, py = frame.toY(xy[i * 2 + 1]) - size / 2;
+        options.hollow[k] ? ctx.strokeRect(px, py, size, size) : ctx.fillRect(px, py, size, size);
+      }
+    }
+    ctx.globalAlpha = 1;
+  });
+  return frame;
+}
+// Chips: 'fill', the curator's label; 'dashed', a proposal (1 px dashed outline); 'outline', a tag
+function chip(ctx, string, color, x, y, look) {
+  ctx.font = '600 13px system-ui'; const w = ctx.measureText(string).width + 12;
+  if (look === 'fill') { ctx.fillStyle = color; ctx.fillRect(x, y - 14, w, 19); }
+  else { ctx.strokeStyle = color; ctx.lineWidth = look === 'dashed' ? 1 : 1.5; ctx.setLineDash(look === 'dashed' ? [3, 2] : []); ctx.strokeRect(x + 0.5, y - 13.5, w - 1, 18); ctx.setLineDash([]); }
+  ctx.fillStyle = look === 'fill' ? T.bg : color; ctx.fillText(string, x + 6, y);
+  return x + w + 6;
+}
+// A label shades the unit's text block (x to x + tint[0], y to y + tint[1]) and puts a bar in its ink at the left; plots
+// stay on the plain background. The selection: a 3 px blue outline and a blue bar at the right (wider on the focused row
+// of a group part of which is selected); a hatched bar says reference
+function shade(ctx, u, x, y, w, h, tint, focused) {
+  if (u.label) { ctx.fillStyle = T.shade[u.label]; ctx.fillRect(x, y, tint[0], tint[1]); ctx.fillStyle = T.ink[u.label]; ctx.fillRect(x, y, 8, h); }
+  if (S.chosen.has(u.unit)) {
+    ctx.fillStyle = T.accent; ctx.fillRect(x + w - (focused ? 16 : 8), y, focused ? 16 : 8, h);
+    ctx.strokeStyle = T.accent; ctx.lineWidth = 3; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  }
+  if (S.ref.includes(u.unit)) { ctx.fillStyle = T.ref; for (let yy = y; yy < y + h; yy += 8) ctx.fillRect(x + w - 6, yy, 6, 4); }
+}
+// The label once decided (filled, ✓), else the proposal (dashed)
+function labelChips(ctx, u, x, y) {
+  if (u.label) return chip(ctx, '✓ ' + word(u.label), T.ink[u.label], x, y, 'fill');
+  return u.proposed ? chip(ctx, word(u.proposed), T.ink[u.proposed], x, y, 'dashed') : x;
+}
+// Bombcell's label on each of the 5 draws of an uncertain unit: a square per draw in its ink, the first (the proposal) outlined
+function drawSquares(ctx, u, x, y) {
+  u.draw_labels.forEach((label, k) => {
+    ctx.fillStyle = T.ink[label]; ctx.fillRect(x + 2 + 14 * k + (k ? 3 : 0), y - 10, 10, 10);
+    if (!k) { ctx.strokeStyle = T.text; ctx.lineWidth = 1.5; ctx.strokeRect(x - 1.5, y - 13.5, 17, 17); }
+  });
+  return x + 2 + 14 * u.draw_labels.length + 8;
+}
+// A unit row's text. Line 1: its colour, id, members (merged), label or proposal, Bombcell's draws (uncertain), tags.
+// Line 2: its numbers in fixed columns. Line 3: the amplitude floor, or a merge this tool made.
+function unitText(ctx, u, x, y, color) {
+  let cx = x;
+  if (color !== T.trace) { ctx.fillStyle = color; ctx.fillRect(x, y + 9, 11, 11); cx += 16; }
+  text(ctx, `${u.unit}`, cx, y + 21, 'bold 18px system-ui', T.text);
+  cx += ctx.measureText(`${u.unit}`).width + 6;
+  if (u.members.length > 1) { text(ctx, `= ${u.members.join(' + ')}`, cx, y + 21, '15px system-ui', T.text2); cx += ctx.measureText(`= ${u.members.join(' + ')}`).width + 4; }
+  cx = labelChips(ctx, u, cx + 4, y + 20);
+  if (u.flips) cx = drawSquares(ctx, u, cx, y + 20);
+  if (u.non_somatic) cx = chip(ctx, 'non-somatic', T.ink.non_soma, cx, y + 20, 'outline');
+  if (u.flagged) cx = chip(ctx, '⚑ flagged', '#a61e4d', cx, y + 20, 'fill');
+  if (S.ref.includes(u.unit)) cx = chip(ctx, 'ref', T.ref, cx, y + 20, 'fill');
+  // Contamination, then size, each value named where it stands
+  namedValues(ctx, untested(u) ? [['foreign', '– (too few spikes)', false], ['short ISI', shortIntervals(u), shortHigh(u) && 'amber']] : measures(u), 14, y + 45);
+  namedValues(ctx, [['', blank(u.amplitude, v => `${v.toFixed(0)} µV`), false], ['SNR', blank(u.snr, v => v.toFixed(1)), false], ['', `${u.n_spikes.toLocaleString()} spikes`, false]].filter(([, v]) => v), 14, y + 64);
+  const note = u.floor !== undefined ? `amplitude floor: ${u.below_floor.toLocaleString()} spikes set aside` : u.auto_merge ? 'merged by this tool (under 500 spikes)' : '';
+  if (note) text(ctx, note, 14, y + 84, '13px system-ui', T.text2);
+  return cx;
+}
+// Places of a row's plots: waveforms, autocorrelogram, amplitude over the session
+function rowLayout(w) {
+  const free = w - TEXT_W - 44, wave = free * 0.45, acg = free * 0.22;
+  return {wave: [TEXT_W, wave], acg: [TEXT_W + wave + 8, acg], amp: [TEXT_W + wave + acg + 16, free * 0.33]};
+}
+// options: scale ('bare' in a group: a gutter and, with bar, an unlabelled scale bar), gridUnits (the rows of a group share
+// their sites), peak (the shared µV scale), sets (the shared amplitude axis), labels
+// (amplitude values beside the frame), check (a tick box), ticks (lag and time ticks under the plots)
+function drawUnitRow(ctx, u, y, w, color, options) {
+  shade(ctx, u, 0, y, w, ROW, [TEXT_W, ROW], options.focused);
+  if (options.check) {
+    const on = S.chosen.has(u.unit);
+    ctx.fillStyle = on ? T.accent : T.bg; ctx.fillRect(13, y + 8, 16, 16);
+    ctx.strokeStyle = on ? T.accent : T.text2; ctx.lineWidth = 1.5; ctx.strokeRect(13.5, y + 8.5, 15, 15);
+    if (on) { ctx.strokeStyle = T.bg; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(16.5, y + 16.5); ctx.lineTo(20, y + 20); ctx.lineTo(26, y + 12); ctx.stroke(); }
+  }
+  const end = unitText(ctx, u, options.check ? CHECK_W + 2 : 14, y, color), place = rowLayout(w), plotH = ROW - 16, acg = hzOf(autocorrelogram(u), spikeTrain(u).length);
+  drawWaveforms(ctx, [u], [color], place.wave[0], y + 4, place.wave[1], ROW - 8, options);
+  drawBars(ctx, acg, color, place.acg[0], y + 8, place.acg[1], plotH, {ticks: options.ticks ? LAG_TICKS : null});
+  drawAmplitude(ctx, [u], [color], place.amp[0], y + 8, place.amp[1], plotH, {sets: options.sets || amplitudeSets([u]), labels: options.labels, ticks: options.ticks});
+  ctx.strokeStyle = T.rule; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y + ROW - 0.5); ctx.lineTo(w, y + ROW - 0.5); ctx.stroke();
+  return end;
+}
+// Scales the rows of a group share: the waveform gain from the units Bombcell does not propose as noise (a larger noise
+// unit overruns its rows, drawn in full) and the amplitude axis; and the words that state them once
+function groupScales(line) {
+  if (!line.scales) {
+    const neurons = line.units.filter(u => u.proposed !== 'noise'), scaled = neurons.length ? neurons : line.units, place = rowLayout(list.clientWidth);
+    const peak = Math.max(...scaled.map(u => tracePeak(traceOf(u)))), sets = amplitudeSets(line.units), axis = brokenAxis(sets.sorted, sets.counted, 0, 0, 100);
+    const uV = siteGrid(measure, line.units.slice(0, 1), place.wave[0], 0, place.wave[1], ROW - 8, undefined, peak, line.units, undefined, undefined, 'bare').bar.uV;
+    line.scales = {peak, sets, overrun: Math.max(...line.units.map(u => tracePeak(traceOf(u)))) > peak,
+                   words: `waveforms: bar ${uV} µV · amplitude 0–${axis.strip ? `${axis.high.toFixed(0)}, break, ` : ''}${axis.top.toFixed(0)} µV`};
+  }
+  return line.scales;
+}
+// Row k of a group, drawn over its place in the line's canvas (a selection redraws only the rows it changes: `fresh`
+// false clears the row first); lag and time ticks and the scale bar under the last row
+function groupRow(ctx, line, k, fresh) {
+  const w = list.clientWidth, scale = window.devicePixelRatio || 1, y = line.head + k * ROW, u = line.units[k], last = k === line.units.length - 1, scales = groupScales(line);
+  const part = line.units.some(v => !S.chosen.has(v.unit));
+  const draw = () => drawUnitRow(ctx, u, y, w, colorOf(u, line), {scale: 'bare', bar: last, gridUnits: line.units, peak: scales.peak, sets: scales.sets,
+                                                                   check: line.units.length > 1, focused: part && u.unit === S.focusUnit, ticks: last});
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  if (fresh) return draw();
+  ctx.clearRect(0, y, w, ROW + (last ? AXIS_H : 0));
+  let end;
+  clipped(ctx, 0, y, w, ROW + (last ? AXIS_H : 0), () => { end = draw(); });
+  return end;
+}
+// A group's header: its units (and 'new' on a possible pair that appeared after the session opened), the decision strip
+// in four cells over the plot columns (titles in the column strip), and the scales its rows share
+function groupHeader(ctx, line, w) {
+  const g = line.group, merged = line.units.length === 1;
+  ctx.fillStyle = merged ? T.mergedHead : T.groupHead; ctx.fillRect(0, 0, w, line.head);
+  if (!openGroup(g)) { ctx.fillStyle = T.ink.noise; ctx.fillRect(0, 0, 5, line.head); }
+  line.title.forEach((string, k) => text(ctx, string, 12, 21 + 17 * k, 'bold 15px system-ui', T.text));
+  if (line.isNew) chip(ctx, 'new', T.accent, 12 + ctx.measureText(line.title[line.title.length - 1]).width + 10, 21 + 17 * (line.title.length - 1), 'fill');
+  drawParts(ctx, stripParts(g, g.units.map(unitOf)), 12, 21 + 17 * line.title.length, w - 24, '600 13px system-ui', true, 17);
+  if (!line.collapsed) text(ctx, groupScales(line).words, w - 12, line.head - 7, '12px system-ui', T.text2, 'right');
+}
+// Measures as name and value pairs from x on one line, names grey, values bold; returns where the line ends
+function namedValues(ctx, cells, x, y) {
+  cells.forEach(([name, value, bad], k) => {
+    if (k) x += 12;
+    text(ctx, name, x, y, '13px system-ui', T.text2); x += ctx.measureText(name).width + 4;
+    text(ctx, value, x, y, '600 13px system-ui', valueInk(value, bad)); x += ctx.measureText(value).width;
+  });
+  return x;
+}
+// A tile. Line 1: id, label or proposal (where it is not the section's), tags, spikes and µV at the right. Line 2: foreign
+// %, KS ratio, and short ISI only over its threshold. The peak site and its two neighbours, each on its own scale, and
+// the autocorrelogram (lag ticks in a section's first row).
+function drawTile(ctx, u, x, h, axis) {
+  const w = S.tileW - 2, top = 52, right = x + w - 10;
+  shade(ctx, u, x, 0, w, h - 2, [w, top - 4]);
+  ctx.strokeStyle = T.rule; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, 0.5, w - 1, h - 3);
+  clipped(ctx, x + 8, 0, S.tileW - 18, top - 4, () => {
+    const name = u.members.length > 1 ? `${u.unit} = ${u.members.join('+')}` : `${u.unit}`, size = `${u.n_spikes.toLocaleString()} spikes · ${fmt(u.amplitude, 0)} µV`;
+    text(ctx, name, x + 14, 20, 'bold 15px system-ui', T.text);
+    let cx = x + 22 + ctx.measureText(name).width;
+    if (u.label) cx = chip(ctx, '✓ ' + word(u.label), T.ink[u.label], cx, 20, 'fill');
+    else if (u.proposed && u.proposed !== u.section) cx = chip(ctx, word(u.proposed), T.ink[u.proposed], cx, 20, 'dashed');
+    if (u.non_somatic) cx = chip(ctx, 'non-som.', T.ink.non_soma, cx, 20, 'outline');
+    if (u.flagged) cx = chip(ctx, '⚑', '#a61e4d', cx, 20, 'fill');
+    ctx.font = '13px system-ui';
+    text(ctx, size, Math.max(right, cx + ctx.measureText(size).width), 20, '13px system-ui', T.text2, 'right');
+    namedValues(ctx, untested(u) ? [['too few spikes to test', '', false]] : measures(u).filter(([name, , alarm]) => name !== 'short ISI' || alarm), x + 14, 42);
+  });
+  const waveW = (S.tileW - 30) * 0.55, plotH = S.tileH - top - 10, acg = hzOf(autocorrelogram(u), spikeTrain(u).length);
+  drawWaveforms(ctx, [u], [T.trace], x + 10, top, waveW, plotH + 2, {sites: TILE_SITES, clip: true});
+  drawBars(ctx, acg, T.bars, x + 18 + waveW, top + 2, S.tileW - 36 - waveW, plotH - 2, {ticks: axis ? LAG_TICKS : null});
+}
+// Units a section header's click selects: those of its lines (in the remaining view, the units left)
+const sectionUnits = section => S.lines.filter(l => l.section === section && l.type !== 'header').flatMap(l => l.units);
+function drawLine(line, index) {
+  const w = list.clientWidth, ctx = setup(S.canvases.get(index), w, line.h);
+  S.canvases.get(index).style.top = line.y + 'px';
+  if (line.type === 'header') {
+    ctx.fillStyle = T.header; ctx.fillRect(0, 0, w, line.h);
+    text(ctx, `${line.title} · ${line.count}`, 12, 23, 'bold 17px system-ui', T.text);
+    let x = 22 + ctx.measureText(`${line.title} · ${line.count}`).width;
+    const chosen = looks(line)[0];
+    if (chosen) text(ctx, `${chosen} selected`, x, 23, 'bold 15px system-ui', T.accent);
+    // The accept button: the unlabelled tiles of this section on screen take their proposals
+    if (line.accept) {
+      ctx.font = '13px system-ui';
+      const words = 'accept on screen as proposed  a', bw = ctx.measureText(words).width + 18;
+      line.acceptBox = [w - 12 - bw, w - 12];
+      ctx.fillStyle = T.bg; ctx.fillRect(w - 12 - bw, 4, bw, line.h - 8);
+      ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(w - 12 - bw + 0.5, 4.5, bw - 1, line.h - 9);
+      text(ctx, words, w - 12 - bw + 9, 21, '13px system-ui', T.text);
+    }
+  } else if (line.type === 'unit') return [drawUnitRow(ctx, line.units[0], 0, w, colorOf(line.units[0], line), {scale: true, labels: true, ticks: line.axis})];
+  else if (line.type === 'group') {
+    groupHeader(ctx, line, w);
+    return line.collapsed ? [] : line.units.map((u, k) => groupRow(ctx, line, k, true));
+  } else line.units.forEach((u, k) => drawTile(ctx, u, k * S.tileW, line.h, line.axis));
+}
+function removeLine(index) {
+  S.canvases.get(index).remove(); S.canvases.delete(index);
+  for (const element of S.extras.get(index) || []) element.remove();
+  S.extras.delete(index);
+}
+// The column strip over the list. Tiles at the top: the tile's plots. Otherwise, the text column: unit and proposal, the
+// number columns (titles on two lines); over the plots: the decision cells of a group header, then the plots of a row.
+function drawColumns() {
+  const canvas = document.getElementById('columns'), w = list.clientWidth, ctx = setup(canvas, w, STRIP_H);
+  const first = S.lines.find(l => l.type !== 'header' && l.y + l.h > list.scrollTop + 30), font = '12px system-ui';
+  if (first && first.type === 'tiles') {
+    for (let k = 0; k * S.tileW < w - 10; k++) {
+      text(ctx, 'waveform, own scale', k * S.tileW + 12, 36, font, T.text2);
+      text(ctx, 'autocorrelogram', k * S.tileW + 18 + (S.tileW - 30) * 0.55, 36, font, T.text2);
+    }
+    return;
+  }
+  text(ctx, 'unit · Bombcell proposes', 14, 14, font, T.text2);
+  const place = rowLayout(w);
+  text(ctx, 'waveforms (probe columns)', place.wave[0] + 6, 36, font, T.text2);
+  text(ctx, 'autocorrelogram', place.acg[0], 36, font, T.text2);
+  text(ctx, 'amplitude over session', place.amp[0] + 10, 36, font, T.text2);
+}
+function drawList() {
+  const top = list.scrollTop - 400, bottom = list.scrollTop + list.clientHeight + 400;
+  for (const index of [...S.canvases.keys()]) {
+    const line = S.lines[index];
+    if (!line || line.y + line.h < top || line.y > bottom) removeLine(index);
+  }
+  S.lines.forEach((line, index) => {
+    if (line.y + line.h < top || line.y > bottom || S.canvases.has(index)) return;
+    const canvas = document.createElement('canvas');
+    canvas.dataset.index = index; list.appendChild(canvas); S.canvases.set(index, canvas);
+    const ends = drawLine(line, index);
+    // Every merged unit row carries an Unmerge button after its id and chips; a merged group, at the right of its line
+    const buttons = [];
+    if (line.type !== 'tiles') line.units.forEach((u, k) => {
+      if (u.members.length < 2) return;
+      if (line.collapsed) return;
+      const button = document.createElement('button');
+      button.textContent = 'Unmerge';
+      button.dataset.dy = (line.type === 'group' ? line.head + k * ROW : 0) + 4;
+      button.style.left = ends[k] + 6 + 'px'; button.style.top = line.y + +button.dataset.dy + 'px';
+      button.onclick = e => { e.stopPropagation(); button.blur(); enqueue(() => unmerge(u.unit)); };
+      list.appendChild(button); buttons.push(button);
+    });
+    S.extras.set(index, buttons);
+  });
+  drawColumns();
+}
+function drawAll() {
+  for (const index of [...S.canvases.keys()]) removeLine(index);
+  drawList(); drawPanel();
+}
+
+// Frame of a small plot, the ends of both axes labelled (ticks: label and place along the axis, 0 to 1) and both axes named
+function plotAxes(ctx, x, y, w, h, xTicks, yTicks, xName, yName) {
+  ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  xTicks.forEach(([label, at]) => text(ctx, label, x + at * w, y + h + 16, '12px system-ui', T.text2, at === 0 ? 'left' : at === 1 ? 'right' : 'center'));
+  yTicks.forEach(([label, at]) => text(ctx, label, x - 4, y + h - at * h + (at === 1 ? 10 : at === 0 ? 0 : 4), '11px system-ui', T.text2, 'right'));
+  text(ctx, xName, x + w / 2, y + h + 31, '12px system-ui', T.text2, 'center');
+  ctx.save(); ctx.translate(x - 42, y + h / 2); ctx.rotate(-Math.PI / 2); text(ctx, yName, 0, 0, '12px system-ui', T.text2, 'center'); ctx.restore();
+}
+// Symlog value axis of the cross-correlograms (x chance): 0 to `top` (a power of 10), ticks 0, 1x, 10x, ...
+// When b fires around a's spikes, ±20 ms in 0.5 ms bins as a multiple of chance, without the pairs within 0.25 ms (double
+// detections): the two bins at 0 hold only their 0.25-0.5 ms halves, on their own width
+function nearRate(p) {
+  const values = Float64Array.from(pairRate(p.a, p.b, 20, 0.5)), ms = S.meta.rate_hz / 1000;
+  const chance = spikeTrain(p.a).length * spikeTrain(p.b).length / S.duration * 0.25 / 1000;
+  values[39] = lagCount(p.a, p.b, 0.25 * ms, 0.5 * ms, true) / chance;
+  values[40] = lagCount(p.a, p.b, 0.25 * ms, 0.5 * ms, false) / chance;
+  return values;
+}
+// The shared top of these pairs' plots (x chance, linear): a round value at or above every bin, at least 2
+function timingTop(pairs) {
+  const most = Math.max(2, ...pairs.flatMap(p => [...nearRate(p)]));
+  const step = 10 ** Math.floor(Math.log10(most)), round = [1, 2, 5, 10].map(k => k * step).find(v => v >= most);
+  return round;
+}
+// What the refractory test (KS4 method) says of a pair, and its colour
+const pairVerdict = p => p.shared ? ['duplicate spikes', T.ink.good] : p.verdict === 'refractory' ? ['passes', T.ink.good] : p.verdict === 'not refractory' ? ['fails', T.bad]
+  : p.verdict === 'untestable' ? [`untestable: ${p.expected.toFixed(1)} expected`, T.text2] : ['…', T.text2];
+// When b fires around a's spikes, ±20 ms in 0.5 ms bins, as a multiple of chance on the shared linear axis up to `top`:
+// within 0.25 ms grey, 0.25-1.25 ms pink, 1x chance dashed. Kilosort's refractory test (KS4 method) on its 1 ms bins:
+// the bins it counts marked under the axis with their level, its flank level, and its pass line (the limit times the
+// flank) under which their level must lie. The verdict in the top right corner; the pair that decides the group's
+// reading framed in its colour.
+function drawNearTiming(ctx, p, x, y, w, h, top, yTicks, decides) {
+  const values = nearRate(p), toY = v => y + h - v / top * h, atMs = ms => x + (ms + 20) / 40 * w;
+  ctx.fillStyle = T.window;
+  for (const [from, to] of [[-1.25, -0.25], [0.25, 1.25]]) ctx.fillRect(atMs(from), y, atMs(to) - atMs(from), h);
+  ctx.fillStyle = T.bars;
+  // The two bins at 0 cover only their 0.25-0.5 ms halves; the 0.25 ms on each side of 0 stays blank
+  values.forEach((v, k) => { const from = k === 40 ? atMs(0.25) : x + k * w / values.length, to = k === 39 ? atMs(-0.25) : x + (k + 1) * w / values.length; ctx.fillRect(from, toY(v), to - from + 0.3, y + h - toY(v)); });
+  const across = (level, from, to) => { ctx.beginPath(); ctx.moveTo(from, toY(level)); ctx.lineTo(to, toY(level)); ctx.stroke(); };
+  ctx.strokeStyle = T.text2; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); across(1, x, x + w); ctx.setLineDash([]);
+  ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  [['−20', 0, 'left'], ['0', 0.5, 'center'], ['20 ms', 1, 'right']].forEach(([label, at, align]) => text(ctx, label, x + at * w, y + h + 14, '12px system-ui', T.text2, align));
+  // Pairs in the pink zone, and how many two independent cells would give there (the busier 2-10 ms side's level)
+  const ms = S.meta.rate_hz / 1000, centre = lagCount(p.a, p.b, 0.25 * ms, 1.25 * ms, false) + lagCount(p.a, p.b, 0.25 * ms, 1.25 * ms, true), flank = Math.max(lagCount(p.a, p.b, 2 * ms, 10 * ms, true), lagCount(p.a, p.b, 2 * ms, 10 * ms, false)) / 8;
+  const said = `${centre} pairs here · ${(2 * flank).toFixed(0)} if two cells`;
+  ctx.font = '600 12px system-ui';
+  const sw = ctx.measureText(said).width + 8;
+  ctx.fillStyle = T.bg; ctx.globalAlpha = 0.85; ctx.fillRect(x + w / 2 - sw / 2, y + 3, sw, 16); ctx.globalAlpha = 1;
+  text(ctx, said, x + w / 2, y + 15, '600 12px system-ui', T.text, 'center');
+  text(ctx, `← ${p.b.unit} fires before`, x, y + h + 29, '12px system-ui', T.text2);
+  text(ctx, `${p.b.unit} fires after →`, x + w, y + h + 29, '12px system-ui', T.text2, 'right');
+  if (yTicks) for (const v of [0, 1, top]) text(ctx, v === 0 ? '0' : v === 1 ? '1× chance' : `${v}×`, x - 4, toY(v) + 4, '12px system-ui', T.text2, 'right');
+}
+// When b fires around a's spikes, ±1 s in 20 ms bins as a multiple of chance, on the plot's own linear axis
+function drawWideTiming(ctx, p, x, y, w, h) {
+  const values = pairRate(p.a, p.b, 1000, 20), most = Math.max(2, ...values), step = 10 ** Math.floor(Math.log10(most)), top = [1, 2, 5, 10].map(k => k * step).find(v => v >= most);
+  const toY = v => y + h - v / top * h;
+  ctx.fillStyle = T.bars;
+  values.forEach((v, k) => ctx.fillRect(x + k * w / values.length, toY(v), w / values.length + 0.3, y + h - toY(v)));
+  ctx.strokeStyle = T.text2; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(x, toY(1)); ctx.lineTo(x + w, toY(1)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = T.frame; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  [['−1', 0, 'left'], ['0', 0.5, 'center'], ['1 s', 1, 'right']].forEach(([label, at, align]) => text(ctx, label, x + at * w, y + h + 14, '12px system-ui', T.text2, align));
+  text(ctx, `← ${p.b.unit} fires before`, x, y + h + 29, '12px system-ui', T.text2);
+  text(ctx, `${p.b.unit} fires after →`, x + w, y + h + 29, '12px system-ui', T.text2, 'right');
+  for (const v of [0, 1, top]) text(ctx, v === 0 ? '0' : v === 1 ? '1× chance' : `${v}×`, x - 4, toY(v) + 4, '12px system-ui', T.text2, 'right');
+}
+// Spikes of b from lo to hi samples after (or, with before, before) a spike of a, the lag counted once per spike pair
+function lagCount(a, b, lo, hi, before) {
+  const ta = spikeTrain(a), tb = spikeTrain(b), key = `count|${a.members}|${b.members}|${lo}|${hi}|${!!before}`;
+  if (!S.pairs.has(key)) {
+    let n = 0, start = 0;
+    for (let i = 0; i < ta.length; i++) {
+      const from = before ? ta[i] - hi : ta[i] + lo, to = before ? ta[i] - lo : ta[i] + hi;
+      while (start < tb.length && tb[start] < from) start++;
+      for (let j = start; j < tb.length && tb[j] <= to; j++) n++;
+    }
+    S.pairs.set(key, n);
+  }
+  return S.pairs.get(key);
+}
+// Each unit's median amplitude in µV (Kilosort's per-spike amplitude scaled by the unit's median µV over its median
+// Kilosort amplitude) on one shared axis, by the time since the other unit's last spike (only one neuron's spikes shrink
+// after the other unit fires) or, with either, since the previous spike of either unit (doubling bins up to 512 ms); a
+// dotted line at each unit's median; bins with fewer than 10 spikes of a unit are left out
+function drawAmplitudeByInterval(ctx, units, colors, x, y, w, h, either) {
+  const edges = [0, 2, 4, 8, 16, 32, 64, 128, 256, 512, Infinity], trains = units.map(spikeTrain), amps = units.map(u => S.amps.get(u.unit)), ms = S.meta.rate_hz / 1000;
+  const byBin = units.map((u, k) => {
+    const own = trains[k], other = either ? mergedTrain(trains) : trains[1 - k], bins = edges.slice(1).map(() => []);
+    for (let i = 0, last = -1; i < own.length; i++) {
+      while (last + 1 < other.length && other[last + 1] < own[i]) last++;
+      if (last >= 0) bins[edges.findIndex((edge, e) => e > 0 && (own[i] - other[last]) / ms <= edge) - 1].push(amps[k][i]);
+    }
+    return bins;
+  });
+  const median = values => Float32Array.from(values).sort()[values.length >> 1];
+  const toUV = units.map((u, k) => u.amplitude / median(amps[k]));
+  const levels = byBin.map((bins, k) => bins.map(v => v.length >= 10 ? median(v) * toUV[k] : null)), shown = levels.flat().filter(v => v !== null);
+  const top = 1.1 * Math.max(...shown, ...units.map(u => u.amplitude)), low = 0.9 * Math.min(...shown, ...units.map(u => u.amplitude));
+  const toX = k => x + (k + 0.5) / (edges.length - 1) * w, toY = v => y + h - (v - low) / (top - low) * h;
+  units.forEach((u, k) => { ctx.strokeStyle = colors[k]; ctx.setLineDash([2, 3]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, toY(u.amplitude)); ctx.lineTo(x + w, toY(u.amplitude)); ctx.stroke(); ctx.setLineDash([]); });
+  levels.forEach((values, k) => {
+    ctx.strokeStyle = ctx.fillStyle = colors[k]; ctx.lineWidth = 2; ctx.beginPath();
+    let pen = false;
+    values.forEach((v, b) => { if (v === null) { pen = false; return; } pen ? ctx.lineTo(toX(b), toY(v)) : ctx.moveTo(toX(b), toY(v)); pen = true; });
+    ctx.stroke();
+    values.forEach((v, b) => { if (v !== null) ctx.fillRect(toX(b) - 3, toY(v) - 3, 6, 6); });
+  });
+  plotAxes(ctx, x, y, w, h, [['<2', 0.5 / 10], ['8–16', 3.5 / 10], ['128–256', 7.5 / 10], ['>512', 9.5 / 10]], [[`${low.toFixed(0)}`, 0], [`${top.toFixed(0)} µV`, 1]],
+           either ? 'time since either unit fired (ms)' : 'time since the other unit fired (ms)', 'median amplitude (µV)');
+}
+// Peak-to-peak amplitude of each unit on each channel (a dot) against the channel's depth, each over its own largest on
+// any channel; a line through the mean of the channels at each depth; channels a unit has no data on are left out; the
+// footprint correlation in the corner
+function drawFootprints(ctx, answer, units, colors, x, y, w, h, r) {
+  const depths = answer.xy.map(c => c[1]), levels = [...new Set(depths)].sort((a, b) => a - b), low = levels[0], high = levels[levels.length - 1];
+  const toX = depth => x + 4 + (depth - low) / (high - low) * (w - 8), toY = v => y + h - 4 - v * (h - 8);
+  units.forEach((u, k) => {
+    const ptp = answer.ptp[u.unit], top = answer.largest[u.unit];
+    const mean = levels.map(d => { const here = ptp.filter((v, i) => depths[i] === d && v !== null); return here.length ? here.reduce((a, b) => a + b, 0) / here.length / top : null; });
+    ctx.strokeStyle = ctx.fillStyle = colors[k]; ctx.lineWidth = 1.5; ctx.beginPath();
+    let pen = false;
+    levels.forEach((d, j) => { if (mean[j] === null) { pen = false; return; } pen ? ctx.lineTo(toX(d), toY(mean[j])) : ctx.moveTo(toX(d), toY(mean[j])); pen = true; });
+    ctx.stroke();
+    ptp.forEach((v, i) => { if (v !== null) ctx.fillRect(toX(depths[i]) - 2, toY(v / top) - 2, 4, 4); });
+  });
+  plotAxes(ctx, x, y, w, h, [[`${low.toFixed(0)}`, 0], [`${high.toFixed(0)}`, 1]], [['0', 0], ['1', 1]], 'channel depth (µm)', 'amplitude / own max');
+  if (r) text(ctx, r, x + 6, y + 15, '600 12px system-ui', T.text);
+}
+// Spikes of each unit per 5 minutes over the session (the last, shorter block scaled to 5 minutes)
+function drawTurns(ctx, units, colors, x, y, w, h) {
+  const block = 300 * S.meta.rate_hz, nBlocks = Math.ceil(S.meta.n_samples / block), last = S.meta.n_samples - (nBlocks - 1) * block;
+  const courses = units.map(u => {
+    const counts = new Float64Array(nBlocks);
+    for (const t of spikeTrain(u)) counts[Math.floor(t / block)]++;
+    counts[nBlocks - 1] *= block / last;
+    return counts;
+  });
+  const top = Math.max(1, ...courses.flatMap(c => [...c])), mid = b => (b * block + Math.min((b + 1) * block, S.meta.n_samples)) / 2;
+  const toX = sample => x + 3 + sample / S.meta.n_samples * (w - 6), toY = v => y + h - 3 - v / top * (h - 6);
+  courses.forEach((counts, k) => {
+    ctx.strokeStyle = ctx.fillStyle = colors[k]; ctx.lineWidth = 1.5; ctx.beginPath();
+    counts.forEach((v, b) => b ? ctx.lineTo(toX(mid(b)), toY(v)) : ctx.moveTo(toX(mid(b)), toY(v)));
+    ctx.stroke();
+    counts.forEach((v, b) => ctx.fillRect(toX(mid(b)) - 2, toY(v) - 2, 4, 4));
+  });
+  plotAxes(ctx, x, y, w, h, [['0', 0], [`${(S.duration / 60).toFixed(0)}`, 1]], [['0', 0], [top.toLocaleString(undefined, {maximumFractionDigits: 0}), 1]], 'time (min)', 'spikes / 5 min');
+}
+// Text parts [string, colour] wrapped word by word into lines of a width from x; returns the lines drawn (with draw false,
+// only counts them)
+function drawParts(ctx, parts, x, y, width, font, draw, lineH) {
+  ctx.font = font;
+  let px = x, line = 0;
+  for (const [string, color] of parts) for (const piece of string.split(/(?<= )/)) {
+    const pw = ctx.measureText(piece).width;
+    if (px > x && px + pw > x + width) { px = x; line += 1; }
+    if (draw) text(ctx, piece, px, y + lineH * line, font, color);
+    px += pw;
+  }
+  return line + 1;
+}
+// A row of small segmented controls ending at `right` on text line y of a panel section; each segment [label, on,
+// action]. A click on one runs its action (S.toggles holds the boxes per section). Returns where the row starts.
+function toggles(ctx, section, groups, right, y) {
+  const boxes = [];
+  let x = right;
+  for (const group of [...groups].reverse()) {
+    for (const [label, on, action] of [...group].reverse()) {
+      const font = on ? '600 12px system-ui' : '12px system-ui';
+      ctx.font = font; const bw = ctx.measureText(label).width + 12;
+      x -= bw;
+      ctx.fillStyle = on ? T.header : T.bg; ctx.fillRect(x, y - 13, bw, 18);
+      ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y - 12.5, bw - 1, 17);
+      text(ctx, label, x + 6, y, font, T.text);
+      boxes.push({x0: x, x1: x + bw, y0: y - 13, y1: y + 5, action});
+    }
+    x -= 8;
+  }
+  S.toggles[section] = boxes;
+  return x;
+}
+// Width of a row of segmented controls
+function togglesWidth(ctx, groups) {
+  return groups.reduce((sum, group) => sum + 8 + group.reduce((part, [label, on]) => { ctx.font = on ? '600 12px system-ui' : '12px system-ui'; return part + ctx.measureText(label).width + 12; }, 0), -8);
+}
+const setView = view => enqueue(() => { S.view = view; remember('view', S.view); drawPanel(['waveforms']); });
+// More than MANY units (a section) selected: foreign spikes against amplitude, a dot per unit in its label's ink (filled:
+// your label; ring: the proposal), the 20% line, units too small to test in a strip under the axis; a click on a dot
+// selects that unit. Nothing selected: where to click.
+function drawMany(chosen, w) {
+  const h = chosen.length ? 400 : 40, canvas = document.createElement('canvas'), ctx = setup(canvas, w, h);
+  canvas.dataset.section = 'many';
+  sectionsBox.replaceChildren(canvas); S.panelCanvases.clear(); S.panelLayout = null; S.panelItem = null; S.dotHits = [];
+  if (!chosen.length) return text(ctx, 'Click a merge group, a unit, a tile or a section header to inspect it here.', 14, 26, '15px system-ui', T.text2);
+  text(ctx, `${chosen.length} units selected`, 14, 24, 'bold 17px system-ui', T.text);
+  const x0 = 104, y0 = 52, pw = w - x0 - 20, ph = 250, tested = chosen.filter(u => !untested(u));
+  const xTop = 1.05 * Math.max(...chosen.map(u => u.amplitude || 0)), yTop = 1.05 * Math.max(0.25, ...tested.map(u => u.rp_contamination));
+  const toX = v => x0 + v / xTop * pw, toY = v => y0 + ph - v / yTop * ph, stripY = y0 + ph + 26;
+  ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.strokeRect(x0 + 0.5, y0 + 0.5, pw - 1, ph - 1);
+  ctx.strokeStyle = T.bad; ctx.setLineDash([5, 3]); ctx.beginPath(); ctx.moveTo(x0, toY(0.2)); ctx.lineTo(x0 + pw, toY(0.2)); ctx.stroke(); ctx.setLineDash([]);
+  for (const [label, v] of [['0', 0], ['20%', 0.2], [`${(100 * yTop).toFixed(0)}%`, yTop]]) text(ctx, label, x0 - 5, toY(v) + 4, '12px system-ui', v === 0.2 ? T.bad : T.text2, 'right');
+  ctx.save(); ctx.translate(x0 - 54, y0 + ph / 2); ctx.rotate(-Math.PI / 2); text(ctx, 'foreign spikes', 0, 0, '12px system-ui', T.text2, 'center'); ctx.restore();
+  text(ctx, 'too few spikes', x0 - 5, stripY + 4, '12px system-ui', T.text2, 'right');
+  text(ctx, '0', x0, stripY + 24, '12px system-ui', T.text2); text(ctx, `${xTop.toFixed(0)} µV`, x0 + pw, stripY + 24, '12px system-ui', T.text2, 'right');
+  text(ctx, 'amplitude (µV)', x0 + pw / 2, stripY + 24, '12px system-ui', T.text2, 'center');
+  for (const u of chosen) {
+    const px = toX(u.amplitude || 0), py = untested(u) ? stripY : toY(u.rp_contamination), ink = T.ink[u.label || u.proposed];
+    ctx.fillStyle = ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, 4, 0, 2 * Math.PI);
+    u.label ? ctx.fill() : ctx.stroke();
+    S.dotHits.push({unit: u.unit, x: px, y: py});
+  }
+  // Key: the labels and proposals present
+  let kx = x0;
+  for (const label of LABELS.concat(['non_soma']).filter(l => chosen.some(u => (u.label || u.proposed) === l))) {
+    ctx.fillStyle = T.ink[label]; ctx.fillRect(kx, stripY + 40, 10, 10);
+    text(ctx, word(label), kx + 14, stripY + 49, '12px system-ui', T.text2); kx += ctx.measureText(word(label)).width + 30;
+  }
+  text(ctx, 'filled: your label · ring: proposal', kx, stripY + 49, '12px system-ui', T.text2);
+}
+// Comparison panel. Several units: the merge evidence, waveforms, correlograms, amplitude, foreign spikes, numbers,
+// intervals and flight paths, on shared axes (similar units for reference dashed). One unit: its id and label, foreign
+// spikes, numbers, waveforms, autocorrelogram, amplitude floor, intervals and flight paths. More than MANY units (a
+// section): drawMany.
+// `only`: the sections a change touches; the others keep their canvases while the panel shows the same item at the same
+// width. The sections on screen are drawn at once, the others on the next frame.
+function drawPanel(only) {
+  updateButtons();
+  const chosen = S.sel.map(unitOf), units = [...chosen, ...S.ref.map(unitOf)], n = units.length, w = compareBox.clientWidth - 4;
+  const colors = units.map(u => n === 1 ? T.trace : S.colors.get(u.unit)), dashed = units.map(u => S.ref.includes(u.unit));
+  cancelAnimationFrame(S.panelFrame);
+  S.overflow = [];
+  if (!n || chosen.length > MANY) return drawMany(chosen, w);
+  // The panel keeps its place on the same item: the section at its top before the redraw is at its top after it, at the
+  // same offset while that section keeps its height; a new item (a group, a unit row or a tile) opens at the top
+  const line = S.lines[focusIndex()], item = (line.type === 'tiles' || !focusShown() ? [S.focusUnit] : line.units.map(u => u.unit)).join(','), same = S.panelItem === item;
+  const before = S.sectionY || {}, heights = S.sectionH || {}, scrolled = compareBox.scrollTop;
+  const atTop = Object.keys(before).filter(s => same && scrolled > 0 && before[s] <= scrolled + 1).sort((a, b) => before[b] - before[a])[0];
+  S.panelItem = item;
+  const at = S.sectionY = {}, size = S.sectionH = {};
+  // The merge of the selected units, from their original units in one pass
+  const key = S.sel.join('|');
+  S.panelKey = key;
+  let merged = null;
+  if (chosen.length > 1) {
+    const members = chosen.flatMap(u => u.members).sort((a, b) => a - b).join(',');
+    if (!S.trains.has(`merge|${members}`)) S.trains.set(`merge|${members}`, mergedTrain(chosen.flatMap(originalTrains)));
+    const train = S.trains.get(`merge|${members}`);
+    const group = S.groups.find(g => g.units.flatMap(id => unitOf(id).members).sort((a, b) => a - b).join(',') === members);
+    merged = {train, n_spikes: train.length, rate: train.length / S.duration, depth: chosen.reduce((a, b) => b.n_spikes > a.n_spikes ? b : a).depth, isMerge: true, group,
+              acg: () => { if (!S.pairs.has(`merge|${members}`)) S.pairs.set(`merge|${members}`, lagCounts(train, train).counts); return S.pairs.get(`merge|${members}`); },
+              ...(group ? {...group.if_merged, pairs: group.pairs} : S.ks.get(chosen.map(u => u.members).join('|')) || {})};
+    merged.pair = together(chosen, merged.pairs);
+  }
+  const floorUnit = n === 1 && chosen[0].members.length === 1 && chosen[0].members[0] === chosen[0].unit ? chosen[0] : null;
+  const nc = S.flightClusters.length, unknown = v => v === null || v === undefined;
+  const legend = (y, right) => idKey(ctx, units, colors, right, y);
+  const plotTitle = (parts, x, y) => { for (const [string, color, font] of parts) { text(ctx, string, x, y, font || 'bold 14px system-ui', color); x += ctx.measureText(string).width; } };
+  // Columns of the numbers and of the foreign-spikes figure: the units, then the merge of the selection ("…" while it loads)
+  const columns = units.map((u, k) => ({title: `${u.unit}${dashed[k] ? ' ref' : ''}`, color: colors[k], u}));
+  if (merged) columns.splice(chosen.length, 0, {title: 'if merged', color: T.text, u: merged});
+  const loading = u => u.isMerge && u.rp_label === undefined;
+
+  // One unit: its id, label or proposal, tags; the Bombcell tests it failed; its qualifying partners (up to 3, from the
+  // server once per unit), whose ids add the unit for reference
+  const partners = n === 1 ? S.partners.get(units[0].unit) : undefined;
+  if (n === 1 && partners === undefined) {
+    const id = units[0].unit, name = S.name;
+    S.partners.set(id, null);
+    getJSON(`/partners/${name}?unit=${id}`).then(answer => { if (name === S.name && S.byId.has(id)) { S.partners.set(id, answer.filter(p => p.qualifies).slice(0, 3)); if (S.panelKey === key) drawPanel(['head']); } });
+  }
+  const partnerWords = (partners || []).map(p => [`${p.unit}`, p.notch !== null && p.notch <= 0.5 ? '(rarely within 1 ms of it)' : '(takes turns with it)']);
+  const tests = n === 1 ? units[0].failed.filter(t => !['refractory_good', 'presence_ratio', 'num_spikes'].includes(t)).map(t => TESTS[t]) : [];
+  const headH = 34 + (tests.length ? 20 : 0) + 22;
+  const head = y => {
+    const u = units[0];
+    text(ctx, `${u.unit}`, 12, y + 22, 'bold 18px system-ui', T.text);
+    let x = labelChips(ctx, u, 24 + ctx.measureText(`${u.unit}`).width, y + 21);
+    if (u.flips) x = drawSquares(ctx, u, x, y + 21);
+    if (u.non_somatic) x = chip(ctx, 'non-somatic', T.ink.non_soma, x, y + 21, 'outline');
+    if (u.auto_merge) chip(ctx, 'merged by this tool (under 500 spikes)', T.text2, x, y + 21, 'outline');
+    let ly = y + 44;
+    if (tests.length) { text(ctx, `Bombcell failed: ${tests.join(', ')}`, 12, ly, '13px system-ui', T.text2); ly += 20; }
+    S.partnerHits = [];
+    if (!partnerWords.length) return;
+    text(ctx, 'possible merge with (click to compare):', 12, ly, '13px system-ui', T.text2);
+    x = 16 + ctx.measureText('possible merge with (click to compare):').width;
+    partnerWords.forEach(([id, evidence], k) => {
+      if (k) { text(ctx, '·', x, ly, '13px system-ui', T.text2); x += ctx.measureText('· ').width + 2; }
+      text(ctx, id, x, ly, '600 13px system-ui', T.accent);
+      const idW = ctx.measureText(id).width;
+      S.partnerHits.push({unit: +id, x0: x - 2, x1: x + idW + 2, y0: ly - 15, y1: ly + 5});
+      ctx.fillStyle = T.accent; ctx.fillRect(x, ly + 2, idW, 1);
+      x += idW + 4;
+      text(ctx, evidence, x, ly, '13px system-ui', T.text2); x += ctx.measureText(evidence).width + 6;
+    });
+  };
+
+  // Foreign spikes: a bar per unit and the merge against the 20% line where the proposal turns mua, the pairs seen and
+  // expected 0.25-1.25 ms apart at each bar's end
+  measure.font = 'bold 14px system-ui';
+  const titleW = 12 + Math.max(...columns.map(c => measure.measureText(c.title).width)) + 12;
+  const foreignH = 24 + 20 * columns.length + 50;
+  const foreign = y => {
+    text(ctx, 'Foreign spikes', 12, y + 14, '600 13px system-ui', T.text);
+    const x0 = titleW, pw = w - x0 - 150, top = 1.05 * Math.max(0.25, ...columns.filter(c => !loading(c.u) && !untested(c.u)).map(c => c.u.rp_contamination));
+    const toX = v => x0 + v / top * pw, y0 = y + 22, bottom = y0 + 20 * columns.length;
+    columns.forEach((c, k) => {
+      const ly = y0 + 20 * k;
+      text(ctx, c.title, 12, ly + 14, 'bold 14px system-ui', c.color);
+      if (loading(c.u)) return text(ctx, '…', x0 + 4, ly + 14, '13px system-ui', T.text2);
+      if (untested(c.u)) return text(ctx, 'too few spikes to test', x0 + 4, ly + 14, '13px system-ui', T.text2);
+      ctx.fillStyle = c.u.isMerge ? T.bars : c.color; ctx.fillRect(x0, ly + 4, Math.max(1, toX(c.u.rp_contamination) - x0), 12);
+      const pairs = !c.u.rp_seen && Math.round(c.u.rp_expected) === 0 ? 'no pairs seen or expected' : `(${c.u.rp_seen} / ${fmt(c.u.rp_expected, 0)} pairs)`;
+      text(ctx, contamination(c.u), toX(c.u.rp_contamination) + 6, ly + 14, '600 13px system-ui', foreignHigh(c.u) ? T.bad : T.text);
+      text(ctx, pairs, toX(c.u.rp_contamination) + 12 + ctx.measureText(contamination(c.u)).width, ly + 14, '13px system-ui', T.text2);
+    });
+    ctx.strokeStyle = T.frame; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0 + 0.5, y0); ctx.lineTo(x0 + 0.5, bottom); ctx.lineTo(x0 + pw, bottom + 0.5); ctx.stroke();
+    ctx.strokeStyle = T.bad; ctx.setLineDash([5, 3]); ctx.beginPath(); ctx.moveTo(toX(0.2), y0 - 2); ctx.lineTo(toX(0.2), bottom); ctx.stroke(); ctx.setLineDash([]);
+    [['0', 0, 'left'], ['20%', 0.2, 'center'], [`${(100 * top).toFixed(0)}%`, top, 'right']].forEach(([label, v, align]) => text(ctx, label, toX(v), bottom + 14, '12px system-ui', v === 0.2 ? T.bad : T.text2, align));
+    text(ctx, 'foreign spikes (%) · seen / expected: spike pairs 0.25–1.25 ms apart', x0, bottom + 30, '12px system-ui', T.text2);
+  };
+  // Numbers: a column per unit and the merge, each as wide as its widest value; units as rows in blocks beyond 5 columns
+  const rows = [['spikes', u => u.n_spikes.toLocaleString()], ['firing rate', u => rate(u.rate)],
+                ['KS ratio', u => untested(u) ? '' : blank(u.ks_ratio, v => v.toFixed(2)), u => ksHigh(u) && 'amber'], ['short ISI', u => blank(u.short_fraction, v => `${(100 * v).toFixed(2)}%`), u => shortHigh(u) && 'amber'],
+                ['µV', u => blank(u.amplitude, v => v.toFixed(0))], ['SNR', u => blank(u.snr, v => v.toFixed(1))],
+                ['present', u => blank(u.presence, v => `${(100 * v).toFixed(0)}%`)], ['depth', u => unknown(u.depth) ? '' : `${fmt(u.depth, 0)} µm`]];
+  const value = (row, u) => loading(u) && row[0] !== 'spikes' && row[0] !== 'firing rate' ? '…' : row[1](u);
+  const ink = (row, u) => valueInk(value(row, u), row[2] && row[2](u));
+  const across = columns.length <= 5, blocks = [[]], blockH = 40 + 20 * columns.length;
+  let used = titleW;
+  if (!across) for (const row of rows) {
+    measure.font = '13px system-ui';
+    const width = Math.max(measure.measureText(row[0]).width, ...columns.map(c => measure.measureText(value(row, c.u)).width)) + 14;
+    if (used + width > w - 4 && blocks[blocks.length - 1].length) { blocks.push([]); used = titleW; }
+    blocks[blocks.length - 1].push([row, width]); used += width;
+  }
+  const tableH = across ? 30 + 20 * rows.length : blocks.length * blockH;
+  const table = y => {
+    if (across) {
+      ctx.font = '13px system-ui';
+      const labelW = Math.max(...rows.map(([name]) => ctx.measureText(name).width)) + 18, natural = columns.map(c => {
+        ctx.font = 'bold 14px system-ui'; const head = ctx.measureText(c.title).width;
+        ctx.font = '14px system-ui'; return Math.max(head, ...rows.map(row => ctx.measureText(value(row, c.u)).width)) + 22;
+      });
+      const room = (besideTable ? ex : w) - 12 - labelW, widths = natural.reduce((sum, v) => sum + v, 0) <= room ? natural : natural.map(() => room / columns.length);
+      let x = 12 + labelW;
+      columns.forEach((c, k) => {
+        const right = x + widths[k] - 10;
+        text(ctx, c.title, right, y + 16, 'bold 14px system-ui', c.color, 'right');
+        rows.forEach((row, j) => text(ctx, value(row, c.u), right, y + 38 + 20 * j, '14px system-ui', ink(row, c.u), 'right'));
+        x += widths[k];
+      });
+      rows.forEach(([name], j) => text(ctx, name, 12, y + 38 + 20 * j, '13px system-ui', T.text2));
+    } else blocks.forEach((block, b) => {
+      const by = y + b * blockH;
+      columns.forEach((c, k) => text(ctx, c.title, 12, by + 38 + 20 * k, 'bold 14px system-ui', c.color));
+      let x = titleW;
+      for (const [row, width] of block) {
+        text(ctx, row[0], x + width - 14, by + 16, '13px system-ui', T.text2, 'right');
+        columns.forEach((c, k) => text(ctx, value(row, c.u), x + width - 14, by + 38 + 20 * k, '13px system-ui', ink(row, c.u), 'right'));
+        x += width;
+      }
+    });
+  };
+
+  // Waveforms across the panel: the title with the units' ids after it and the view controls at its right; spikes and
+  // density side by side unless overlaid (o), and always side by side above 4 units. The gain comes from the units
+  // Bombcell does not propose as noise (a larger one overruns); the block is as tall as its rows of sites need.
+  const side = n > 1 && (n > 4 || !S.overlay[S.view]);
+  const count = units.flatMap(u => u.members).map(m => S.A.density_count.data[S.rowOf.get(m)]), shown = units.flatMap(u => u.members).map(m => spikeCount(S.rowOf.get(m)));
+  const range = values => `${Math.min(...values)}${Math.max(...values) > Math.min(...values) ? '–' + Math.max(...values) : ''}`;
+  const matched = merged && merged.pair ? merged.pair.pairs.filter(p => p.footprint !== null && p.footprint !== undefined).sort((p, q) => p.footprint - q.footprint)[0] : null;
+  const caption = {mean: 'Mean waveforms', spikes: `Single spikes (${range(shown)} per unit)`, density: `Density of single spikes (${range(count)} per unit)`}[S.view]
+    + (side && n > 8 ? `, first 8 of ${n}` : '') + (matched ? ` · shape across channels ${matched.footprint >= 0.86 ? 'matches' : 'differs'}: r = ${matched.footprint.toFixed(2)} (pieces of one neuron 0.86–1)` : '');
+  const draw = {mean: drawWaveforms, spikes: drawSpikes, density: drawDensity}[S.view], neurons = chosen.filter(u => u.proposed !== 'noise');
+  const peak = Math.max(...(neurons.length ? neurons : chosen).map(u => tracePeak(traceOf(u))));
+  // Mean waveforms of several units: every unit on the union of their sites, from the server once per selection
+  const sharedAnswer = n > 1 && S.view === 'mean' ? loadShared(units) : null, name = S.name, shared = sharedAnswer && sharedAnswer.traces || undefined;
+  const waveControls = [[['mean', S.view === 'mean', () => setView('mean')], ['spikes', S.view === 'spikes', () => setView('spikes')], ['density', S.view === 'density', () => setView('density')]]]
+    .concat(n > 1 && n <= 4 && S.view !== 'density' ? [[['overlay', !side, () => press('o')], ['side', side, () => press('o')]]] : [],
+            [[['−', false, () => press('-')], [`×${S.gain.toFixed(1)}`, S.gain !== 1, () => press('0')], ['+', false, () => press('=')]]]);
+  measure.font = '600 13px system-ui';
+  const captionW = measure.measureText(caption).width, controlsW = togglesWidth(measure, waveControls);
+  const waveKey = n > 1 && !side && 12 + captionW + 14 + idKeyWidth(measure, units) + 14 + controlsW > w - 10 ? 18 : 0;
+  const siteRows = side ? Math.max(...units.slice(0, 8).map(u => siteGrid(measure, [u], 0, 0, 100, 100, S.view === 'density' ? DENSITY_SITES : undefined, peak, undefined, shared, 1, false, true).rows.length))
+    : siteGrid(measure, units, 0, 0, 100, 100, S.view === 'density' ? DENSITY_SITES : undefined, peak, undefined, shared, 1, false, true).rows.length;
+  const waveH = Math.max(150, Math.min(440, Math.max(360, compareBox.clientHeight * 0.5), 34 * (siteRows + 1.4)));
+  const waveformsH = 22 + waveKey + waveH + 8;
+  const waveforms = y => {
+    text(ctx, caption, 12, y + 14, '600 13px system-ui', T.text);
+    toggles(ctx, 'waveforms', waveControls, w - 10, y + 14);
+    if (n > 1 && !side) legend(y + 14 + waveKey, waveKey ? 12 + idKeyWidth(ctx, units) : 12 + captionW + 14 + idKeyWidth(ctx, units));
+    y += 22 + waveKey;
+    if (!side) return draw(ctx, units, colors, 10, y, w - 20, waveH, {scale: 'panel', dashed, peak, shared, zoom: S.gain, fit: true});
+    const m = Math.min(n, 8), columnW = (w - 20) / m;
+    units.slice(0, m).forEach((u, k) => {
+      draw(ctx, [u], [colors[k]], 10 + k * columnW, y, columnW - 6, waveH, {scale: k === 0 ? 'panel' : false, dashed: [dashed[k]], peak, shared, zoom: S.gain, fit: true});
+      idKey(ctx, [u], [colors[k]], 10 + (k + 1) * columnW - 8, y + 14);
+    });
+  };
+
+  // Correlograms: one unit's autocorrelogram (Hz); the matrix of several (rows: selected and reference units, columns:
+  // selected units, then the merge): each autocorrelogram on its own Hz axis, its top in the cell; the
+  // cross-correlograms on one axis as a multiple of chance, its top in each row's first cross-correlogram; lags under
+  // the bottom row; beyond 8 units, each with the first
+  const chance = (counts, a, b) => Float64Array.from(counts, c => c / (spikeTrain(a).length * spikeTrain(b).length / S.duration * 0.001));
+  const acgH = 20 + 110 + 18 + 10, cellH = n <= 4 ? 96 : 62;
+  measure.font = 'bold 14px system-ui';
+  const headW = Math.max(...units.map(u => measure.measureText(`${u.unit}`).width)) + 18, cellW = (w - 20 - headW) / (chosen.length + (merged ? 1 : 0));
+  const matrixH = n <= 8 ? 40 + n * cellH + 34 : 20 + Math.ceil((n + (merged ? 1 : 0)) / 4) * 74 + 10;
+  const autocorrelogramPlot = y => {
+    const values = hzOf(autocorrelogram(units[0]), spikeTrain(units[0]).length), top = Math.max(...values);
+    text(ctx, 'Autocorrelogram (lag ms)', 12, y + 14, '600 13px system-ui', T.text);
+    drawBars(ctx, values, T.bars, 44, y + 20, w - 54, 110, {ticks: LAG_TICKS, yTicks: ['0', `${axisNumber(top)} Hz`], top});
+  };
+  const matrix = y => {
+    if (n > 8) {
+      text(ctx, `Correlograms of ${units[0].unit} with each unit (matrix up to 8 units)`, 12, y + 14, '600 13px system-ui', T.text);
+      const cells = units.map((u, b) => [b === 0 ? autocorrelogram(u) : crossCorrelogram(units[0], u), colors[b], `${u.unit}`]);
+      if (merged) cells.push([merged.acg(), T.bars, 'if merged']);
+      cells.forEach(([counts, color, title], b) => {
+        const cell = (w - 20) / 4, cx = 10 + (b % 4) * cell, cy = y + 20 + Math.floor(b / 4) * 74;
+        drawBars(ctx, counts, color, cx + 2, cy + 2, cell - 4, 54);
+        text(ctx, title, cx + 6, cy + 70, '600 13px system-ui', T.text);
+      });
+      return;
+    }
+    text(ctx, 'Correlograms (row A, column B; lag ms)', 12, y + 14, '600 13px system-ui', T.text);
+    const gx = 10 + headW, gy = y + 40;
+    const cross = units.map(u => chosen.map(v => u === v ? null : chance(crossCorrelogram(u, v), u, v)));
+    const auto = units.map(u => hzOf(autocorrelogram(u), spikeTrain(u).length)).concat(merged ? [hzOf(merged.acg(), merged.train.length)] : []);
+    const crossTop = Math.max(1e-9, ...cross.flat().filter(v => v).flatMap(v => [...v]));
+    chosen.forEach((u, b) => text(ctx, `${u.unit}`, gx + (b + 0.5) * cellW, y + 35, 'bold 14px system-ui', colors[b], 'center'));
+    if (merged) text(ctx, 'if merged', gx + (chosen.length + 0.5) * cellW, y + 35, '600 13px system-ui', T.text, 'center');
+    const cellTop = (string, x, y) => { ctx.font = '12px system-ui'; const tw = ctx.measureText(string).width + 6; ctx.fillStyle = T.bg; ctx.globalAlpha = 0.85; ctx.fillRect(x + 3, y + 3, tw, 15); ctx.globalAlpha = 1; text(ctx, string, x + 6, y + 15, '12px system-ui', T.text2); };
+    units.forEach((u, a) => {
+      text(ctx, `${u.unit}`, 10, gy + (a + 0.5) * cellH + 5, 'bold 14px system-ui', colors[a]);
+      const firstCross = chosen.findIndex(v => v !== u);
+      chosen.forEach((v, b) => {
+        const diagonal = a === b, cx = gx + b * cellW + 2, cy = gy + a * cellH + 2, top = diagonal ? Math.max(1e-9, ...auto[a]) : crossTop;
+        drawBars(ctx, diagonal ? auto[a] : cross[a][b], diagonal ? colors[a] : T.ccg, cx, cy, cellW - 4, cellH - 4,
+                 {top, ticks: a === n - 1 ? LAG_TICKS : null, shared: !diagonal && sharedSpikes(u, v) > 0});
+        if (diagonal) cellTop(`${axisNumber(Math.max(...auto[a]))} Hz`, cx, cy);
+        else if (b === firstCross) cellTop(`${axisNumber(crossTop)}× chance`, cx, cy);
+      });
+    });
+    if (merged) {
+      const cx = gx + chosen.length * cellW + 2, top = Math.max(1e-9, ...auto[n]);
+      drawBars(ctx, auto[n], T.bars, cx, gy + 2, cellW - 4, cellH - 4, {top, ticks: n === 1 ? LAG_TICKS : null});
+      cellTop(`${axisNumber(Math.max(...auto[n]))} Hz`, cx, gy + 2);
+    }
+  };
+
+  // Amplitude over the session: the same share of every unit's spikes on the rows' axis, the units' ids on the caption line
+  const amplitudeCaption = n > 1 ? "Amplitude over the session (the same share of each unit's spikes)" : 'Amplitude over the session (400 spikes)';
+  measure.font = '600 13px system-ui';
+  const keyLine = n > 1 && measure.measureText(amplitudeCaption).width + idKeyWidth(measure, units) > w - 34 ? 18 : 0, amplitudeH = 20 + keyLine + 110 + 18 + 10;
+  const amplitude = y => {
+    text(ctx, amplitudeCaption, 12, y + 14, '600 13px system-ui', T.text);
+    if (n > 1) legend(y + 14 + keyLine, w - 10);
+    drawAmplitude(ctx, units, colors, 10, y + 20 + keyLine, w - 20, 110, {sets: amplitudeSets(units), labels: true, ticks: true, hollow: dashed, fraction: n > 1});
+  };
+  // Amplitude floor: Kilosort amplitude of every spike of the one selected, unmerged unit, scaled to µV by the unit's
+  // median; a click sets a floor to try
+  if (!floorUnit) S.floorPlot = null;
+  // The line under it: the draft floor and both sides of it, or the floor applied, wrapped at its separators
+  const draft = floorUnit && S.floorDraft && S.floorDraft.unit === floorUnit.unit ? S.floorDraft : null, plotH = 150;
+  const toUV = floorUnit && S.amps.get(floorUnit.unit) ? floorUnit.amplitude / medianOf(floorUnit.unit) : null, uV = v => toUV === null ? '…' : `${(v * toUV).toFixed(0)} µV`;
+  const sideOf = s => `${s.n_spikes.toLocaleString()} spikes · foreign ${contamination(s)} · KS ratio ${kilosortRatio(s)} · short ISI ${shortIntervals(s)}`;
+  const floorLines = (!floorUnit ? [] : draft && draft.preview ? [`floor ${uV(draft.floor)} · kept: ${sideOf(draft.preview.above)}`, `set aside: ${sideOf(draft.preview.below)}  — t applies`]
+    : draft ? [`floor ${uV(draft.floor)} …`] : floorUnit.floor !== undefined ? [`floor ${uV(floorUnit.floor)} applied: ${floorUnit.below_floor.toLocaleString()} spikes set aside  — shift+T removes it`] : [])
+    .flatMap(string => wrapped(measure, string, w - 24, '600 13px system-ui'));
+  const floorH = 20 + plotH + 18 + 18 * floorLines.length + 10;
+  const floorPlot = y => {
+    const u = floorUnit, amplitude = S.amps.get(u.unit), name = S.name;
+    text(ctx, 'Amplitude of every spike: click to try a floor, t applies', 12, y + 14, '600 13px system-ui', T.text);
+    S.floorPlot = null;
+    if (!amplitude) return loadAmplitudes([u.unit]).then(() => { if (name === S.name && S.panelKey === key) drawPanel(['floor']); });
+    y += 20;
+    const r = S.rowOf.get(u.unit), train = S.A.spike_sample.data.subarray(S.A.spike_offset.data[r], S.A.spike_offset.data[r + 1]), sorted = S.sortedAmps.get(u.unit);
+    const axis = brokenAxis([sorted], [sorted], sorted[0], y, plotH), floor = draft ? draft.floor : u.floor;
+    // Values of the axis in µV in a gutter left of the frame
+    const labels = [[uV(axis.high), axis.lowY + 12], [uV(axis.low), y + plotH - 3]].concat(axis.strip ? [[uV(axis.top), y + 12]] : []);
+    ctx.font = '12px system-ui';
+    const x0 = 12 + Math.max(...labels.map(([label]) => ctx.measureText(label).width)) + 8, plotW = w - 10 - x0;
+    labels.forEach(([label, ly]) => text(ctx, label, x0 - 5, ly, '12px system-ui', T.text2, 'right'));
+    const step = Math.max(1, Math.floor(train.length / 12000));
+    for (let i = 0; i < train.length; i += step) {
+      ctx.fillStyle = floor !== undefined && amplitude[i] < floor ? T.bad : T.bars;
+      ctx.fillRect(x0 + train[i] / S.meta.n_samples * (plotW - 2), axis.toY(amplitude[i]), 1.6, 1.6);
+    }
+    axisFrames(ctx, axis, x0, plotW);
+    if (floor !== undefined) { ctx.strokeStyle = T.bad; ctx.setLineDash(draft ? [6, 4] : []); ctx.beginPath(); ctx.moveTo(x0, axis.toY(floor) + 0.8); ctx.lineTo(x0 + plotW, axis.toY(floor) + 0.8); ctx.stroke(); ctx.setLineDash([]); }
+    text(ctx, '0', x0, y + plotH + 14, '12px system-ui', T.text2); text(ctx, `${(S.duration / 60).toFixed(0)} min`, x0 + plotW, y + plotH + 14, '12px system-ui', T.text2, 'right');
+    floorLines.forEach((line, k) => text(ctx, line, 12, y + plotH + 34 + k * 18, '600 13px system-ui', T.text));
+    S.floorPlot = {unit: u.unit, axis};
+  };
+
+  // Merge evidence: the cross-correlogram of every pair with spikes enough near 0 (the pairs Kilosort's test fails first,
+  // then by the spikes expected within 1 ms, up to 12) on one shared linear axis, the
+  // footprints across depth, the spikes per 5 minutes; a key to the marks above; the other pairs named under them
+  const pairs = merged ? merged.pair.pairs : [], plotted = pairs.length === 1 ? pairs : pairs.filter(p => p.notch !== null), untestedPairs = pairs.filter(p => !plotted.includes(p));
+  const amplitudePair = chosen.length === 2 && !S.ref.length && chosen.every(u => u.members.length === 1 && !Object.keys(u.floors).length) ? chosen : null;
+  if (amplitudePair && !amplitudePair.every(u => S.amps.has(u.unit))) loadAmplitudes(amplitudePair.map(u => u.unit)).then(() => { if (S.panelKey === key) drawPanel(['table']); });
+  const timed = plotted.slice(0, 12), single = pairs.length === 1, top = timingTop(timed), decided = merged ? reading(pairs, merged) : null;
+  const alike = pairs.filter(p => p.footprint !== null && p.footprint !== undefined).sort((p, q) => p.footprint - q.footprint)[0];
+  const r = alike ? `r ${single ? '=' : '≥'} ${alike.footprint.toFixed(3)}` : '';
+  const besideTable = merged && across, ex = besideTable ? Math.round(w * 0.42) : 0, ew = w - ex;
+  const perRow = ew >= 900 ? 3 : ew >= 560 ? 2 : 1, slotW = (ew - 20) / perRow, evidencePlotH = 150, slotH = 22 + evidencePlotH + 38, gutter = 62;
+  const cells = timed.map(p => ({kind: 'timing', p})).concat(amplitudePair ? [{kind: 'amplitudes'}] : [], pairs.some(p => p.handoff !== null && p.handoff > S.meta.handoff_limit) ? [{kind: 'turns'}] : []).map((cell, k) => ({...cell, at: k}));
+  const marks = [['pink', 'one neuron: no spikes here (pairs within 0.25 ms left out)']];
+  const markW = ([, label]) => { measure.font = '12px system-ui'; return measure.measureText(label).width + 34; };
+  const markAt = flow(marks.map(markW), 12, ew - 10), markLines = timed.length ? markAt[markAt.length - 1][1] + 1 : 0;
+  const also = merged && merged.group && openGroup(merged.group) && merged.group.also_similar.length ? merged.group.also_similar : [];
+  const notes = [untestedPairs.length ? `not plotted (under 5 pairs expected near 0): ${untestedPairs.map(p => `${p.a.unit}–${p.b.unit} (${p.expected.toFixed(1)} expected within 1 ms)`).join(', ')}` : '',
+                 plotted.length > 12 ? `and ${plotted.length - 12} more pairs: tick two rows to see them` : '',
+                 also.length ? `similar units outside this group: ${also.slice(0, 6).join(', ')}${also.length > 6 ? ` and ${also.length - 6} more` : ''}` : ''].filter(Boolean)
+    .flatMap(note => wrapped(measure, note, ew - 24, '13px system-ui'));
+  const evidenceRows = Math.ceil((Math.max(...cells.map(c => c.at)) + 1) / perRow);
+  const evidenceH = 18 * markLines + 6 + evidenceRows * slotH + 18 * notes.length + 6;
+  // Footprints of the selected units, from the server once per selection
+  const footprintKey = `${S.sel.join(',')}|${S.version}`;
+  if (merged && !S.footprints.has(footprintKey)) loadFootprints(S.sel).then(() => { if (S.panelKey === key) drawPanel(['evidence']); });
+  const evidence = y => {
+    // The plots' toggles, all kept (each toggles() call replaces the section's list), moved beside the table when drawn there
+    const section = besideTable ? 'table' : 'evidence', kept = [];
+    const keepBoxes = () => { for (const box of S.toggles[section]) { if (besideTable) { box.x0 += ex; box.x1 += ex; } kept.push(box); } S.toggles[section] = kept; };
+    // Key to the marks
+    marks.forEach(([look, label], k) => {
+      const [mx, row] = markAt[k], my = y + 14 + 18 * row;
+      if (!timed.length) return;
+      if (look === 'pink' || look === 'grey') { ctx.fillStyle = look === 'pink' ? T.window : T.frame; ctx.globalAlpha = look === 'grey' ? 0.55 : 1; ctx.fillRect(mx, my - 10, 22, 12); ctx.globalAlpha = 1; }
+      if (look === 'bins') { ctx.fillStyle = ctx.strokeStyle = T.accent; ctx.fillRect(mx, my - 1, 22, 3); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(mx, my - 7); ctx.lineTo(mx + 22, my - 7); ctx.stroke(); }
+      if (look === 'pass' || look === 'flank') { ctx.strokeStyle = look === 'pass' ? T.bad : T.text; ctx.lineWidth = look === 'pass' ? 1.5 : 1; ctx.setLineDash(look === 'pass' ? [5, 3] : []); ctx.beginPath(); ctx.moveTo(mx, my - 4); ctx.lineTo(mx + 22, my - 4); ctx.stroke(); ctx.setLineDash([]); }
+      text(ctx, label, mx + 28, my, '12px system-ui', T.text2);
+    });
+    const y0 = y + 18 * markLines + 6;
+    for (const cell of cells) {
+      const column = cell.at % perRow, cy = y0 + Math.floor(cell.at / perRow) * slotH, left = column === 0 || cell.kind !== 'timing' ? gutter : 14;
+      const px = 10 + column * slotW + left, pw = slotW - left - 8, py = cy + 22;
+      const name = cell.kind === 'turns' ? 'They take turns over the session: spikes per 5 min' : cell.kind === 'amplitudes' ? 'Spike size after' : single ? `${cell.p.b.unit} around ${cell.p.a.unit}'s spikes` : null;
+      if (name) title(ctx, name, 10 + column * slotW, cy + 15, slotW - 4);
+      else plotTitle([[`${cell.p.a.unit}`, colors[units.indexOf(cell.p.a)]], [' – ', T.text2, '13px system-ui'], [`${cell.p.b.unit}`, colors[units.indexOf(cell.p.b)]]], px, cy + 15);
+      if (cell.kind === 'timing' && cell.at === 0) {
+        // ±20 ms (refractory gap, bursts) or ±1 s (slower structure, e.g. grid cells crossing nearby fields): a click switches
+        toggles(ctx, besideTable ? 'table' : 'evidence', [[['±20 ms', !S.wideTiming, () => { S.wideTiming = false; drawPanel(['table', 'evidence']); }],
+          ['±1 s', S.wideTiming, () => { S.wideTiming = true; drawPanel(['table', 'evidence']); }]]], 10 + (column + 1) * slotW - 6, cy + 15);
+        keepBoxes();
+      }
+      if (cell.kind === 'timing') (S.wideTiming ? drawWideTiming : drawNearTiming)(ctx, cell.p, px, py, pw, evidencePlotH, top, column === 0, decided && decided.pair === cell.p);
+      if (cell.kind === 'footprints' && S.footprints.get(footprintKey)) drawFootprints(ctx, S.footprints.get(footprintKey), chosen, colors, px, py, pw, evidencePlotH, r);
+      if (cell.kind === 'turns') drawTurns(ctx, chosen, colors, px, py, pw, evidencePlotH);
+      if (cell.kind === 'amplitudes') {
+        // After the other unit, or after either unit: a click switches
+        toggles(ctx, besideTable ? 'table' : 'evidence', [[['the other unit', !S.ampEither, () => { S.ampEither = false; drawPanel(['table', 'evidence']); }],
+          ['either', S.ampEither, () => { S.ampEither = true; drawPanel(['table', 'evidence']); }]]], 10 + (column + 1) * slotW - 6, cy + 15);
+        keepBoxes();
+        if (amplitudePair.every(u => S.amps.has(u.unit))) drawAmplitudeByInterval(ctx, amplitudePair, colors, px, py, pw, evidencePlotH, S.ampEither);
+      }
+    }
+    notes.forEach((note, k) => text(ctx, note, 12, y0 + evidenceRows * slotH + 12 + 18 * k, '13px system-ui', T.text2));
+  };
+
+  // Time between spikes at 0.1 ms resolution, 0 to 2 ms: within each unit and the merge, then between the pairs of the
+  // evidence in its order and each reference unit with the first unit (-2 to 2 ms); one shared count axis, ticked on the
+  // first plot of each row; the shading named in the first plot
+  const bin = 0.0001 * S.meta.rate_hz, reach = 0.002 * S.meta.rate_hz;
+  const within = chosen.slice(0, 8).map((u, k) => ({title: [[`${u.unit}`, colors[k]]], color: colors[k], train: spikeTrain(u), acg: autocorrelogram(u)}))
+    .concat(merged ? [{title: [['if merged', T.text]], color: T.bars, train: merged.train, acg: merged.acg()}] : [])
+    .map(item => {
+      const counts = new Int32Array(20), train = item.train;
+      for (let i = 0; i < train.length; i++) for (let j = i + 1; j < train.length && train[j] - train[i] <= reach; j++) counts[Math.min(19, Math.floor((train[j] - train[i]) / bin))]++;
+      return {...item, counts, expected: expectedShort(item.acg) / 10, band: [[0.125, 0.625]], duplicate: [0, S.meta.duplicate_window / reach], ticks: [['0', 0, 'left'], ['1', 0.5, 'center'], ['2 ms', 1, 'right']]};
+    });
+  const between = pairs.map(p => [p.a, p.b]).concat(S.ref.map(id => [chosen[0], unitOf(id)])).slice(0, 8).map(([a, b]) => {
+    const counts = new Int32Array(40), ta = spikeTrain(a), tb = spikeTrain(b);
+    for (let i = 0, start = 0; i < ta.length; i++) {
+      while (start < tb.length && tb[start] < ta[i] - reach) start++;
+      for (let j = start; j < tb.length && tb[j] - ta[i] <= reach; j++) counts[Math.min(39, Math.floor((tb[j] - ta[i] + reach) / bin))]++;
+    }
+    return {title: [[`${a.unit}`, colors[units.indexOf(a)]], [' vs ', T.text2, '13px system-ui'], [`${b.unit}`, colors[units.indexOf(b)]]], color: T.ccg, counts,
+            expected: expectedShort(crossCorrelogram(a, b)) / 10, band: [[0.1875, 0.4375], [0.5625, 0.8125]],
+            duplicate: [0.5 - S.meta.duplicate_window / reach / 2, 0.5 + S.meta.duplicate_window / reach / 2], ticks: [['−2', 0, 'left'], ['0', 0.5, 'center'], ['2 ms', 1, 'right']]};
+  });
+  const fine = within.concat(between), finePerRow = Math.min(4, fine.length), fineTop = Math.ceil(1.15 * Math.max(1, ...fine.flatMap(f => [f.expected, ...f.counts])));
+  const intervalRowH = 20 + 100 + 18 + 6, intervalsH = 22 + intervalRowH * Math.ceil(fine.length / finePerRow);
+  const intervals = y => {
+    text(ctx, 'Time between spikes, 0–2 ms', 12, y + 14, '600 13px system-ui', T.text);
+    ctx.font = '11px system-ui';
+    const fineGutter = Math.max(ctx.measureText(`${fineTop}`).width + 24, 34), slot = (w - 10 - fineGutter) / finePerRow;
+    fine.forEach((f, k) => {
+      const column = k % finePerRow, x0 = 10 + fineGutter + column * slot, top0 = y + 22 + Math.floor(k / finePerRow) * intervalRowH + 20, plotW = slot - 12, h = 100, nb = f.counts.length;
+      const toY = v => top0 + h - v / fineTop * h;
+      ctx.fillStyle = T.window;
+      for (const [from, to] of f.band) ctx.fillRect(x0 + from * plotW, top0, (to - from) * plotW, h);
+      ctx.fillStyle = T.frame; ctx.globalAlpha = 0.55; ctx.fillRect(x0 + f.duplicate[0] * plotW, top0, (f.duplicate[1] - f.duplicate[0]) * plotW, h); ctx.globalAlpha = 1;
+      ctx.fillStyle = f.color;
+      for (let b = 0; b < nb; b++) ctx.fillRect(x0 + b * plotW / nb, toY(f.counts[b]), plotW / nb - 0.5, f.counts[b] / fineTop * h);
+      ctx.strokeStyle = T.text2; ctx.lineWidth = 1; ctx.setLineDash([5, 3]); ctx.beginPath(); ctx.moveTo(x0, toY(f.expected)); ctx.lineTo(x0 + plotW, toY(f.expected)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = T.frame; ctx.strokeRect(x0 + 0.5, top0 + 0.5, plotW - 1, h - 1);
+      plotTitle(f.title, x0, top0 - 5);
+      f.ticks.forEach(([tick, at, align]) => text(ctx, tick, x0 + at * plotW, top0 + h + 13, '12px system-ui', T.text2, align));
+      if (column === 0) { text(ctx, `${fineTop}`, x0 - 3, top0 + 10, '11px system-ui', T.text2, 'right'); text(ctx, '0', x0 - 3, top0 + h, '11px system-ui', T.text2, 'right'); }
+      if (k === 0) {
+        ctx.save(); ctx.translate(x0 - fineGutter + 8, top0 + h / 2); ctx.rotate(-Math.PI / 2); text(ctx, 'pairs per 0.1 ms', 0, 0, '11px system-ui', T.text2, 'center'); ctx.restore();
+        // The shading named inside it
+        ctx.save(); ctx.translate(x0 + (f.duplicate[0] + f.duplicate[1]) / 2 * plotW + 3, top0 + 4); ctx.rotate(Math.PI / 2); text(ctx, 'duplicate', 0, 0, '9px system-ui', T.text); ctx.restore();
+        text(ctx, 'refractory', x0 + f.band[0][0] * plotW + 2, top0 + 11, '9px system-ui', T.text);
+        text(ctx, 'expected', x0 + plotW - 3, toY(f.expected) - 3, '9px system-ui', T.text, 'right');
+      }
+    });
+  };
+
+  // Flight paths in balanced rows of at least 150 px per map, each map on its own path's frame with the title line's
+  // controls at the right: the units together (dots), or a row of rate maps per unit, each with its colour bar from 0 to
+  // its own top
+  const perLine = nc ? Math.ceil(nc / Math.ceil(nc / Math.max(1, Math.floor((w - 20) / 150)))) : 1, mapW = (w - 20) / perLine - 10, boxH = mapW * S.aspect;
+  const mapRows = Math.ceil(nc / perLine), mapH = 18 + boxH + 10 + (S.rate ? 26 : 0), unitH = 22 + mapRows * mapH;
+  const positionsH = S.rate ? 22 + n * unitH : 22 + mapRows * mapH;
+  const mapAt = (k, y) => [10 + (k % perLine) * (mapW + 10), y + Math.floor(k / perLine) * mapH];
+  const fieldControls = [[['dots', !S.rate, () => S.rate && press('r')], ['rate map', S.rate, () => !S.rate && press('r')]]];
+  const positions = y => {
+    // The units together, or one of them alone (, and . step through all, first, second, ...); reference units drawn
+    // first, then the largest
+    const only = (n > 1 && S.posOnly !== null && S.posOnly < n ? [S.posOnly] : units.map((_, k) => k)).sort((p, q) => dashed[q] - dashed[p] || units[q].n_spikes - units[p].n_spikes);
+    // All units together in one colour when b is on (each unit alone keeps its colour)
+    const black = only.length > 1 && S.posBlack;
+    text(ctx, S.rate ? 'Rate maps' : n === 1 ? 'Spikes on the flight paths' : only.length === 1 ? `Spikes on the flight paths: ${units[only[0]].unit} alone` : `Spikes on the flight paths: all${black ? ', one colour' : ''}`, 12, y + 15, '600 13px system-ui', T.text);
+    toggles(ctx, 'positions', fieldControls, w - 10, y + 15);
+    if (S.rate) {
+      // Rate map of each unit per flight cluster, each on its own colour scale from 0 to its peak
+      // Asked once at a time; a failed request is asked again at the next draw
+      const mapKey = u => `${u.members}|${JSON.stringify(u.floors)}`, missing = units.filter(u => !S.ratemaps.has(mapKey(u))), name = S.name;
+      const asked = `${name}|${missing.map(mapKey).join(';')}`;
+      if (missing.length && S.ratemapsAsked !== asked) {
+        S.ratemapsAsked = asked;
+        getJSON(`/ratemaps/${name}?units=${missing.map(u => u.unit).join(',')}`).then(answer => {
+          if (name !== S.name) return;
+          S.rateGrid = {shape: answer.shape, extent: answer.extent};
+          for (const u of missing) S.ratemaps.set(mapKey(u), answer.maps[u.unit]);
+          if (S.panelKey === key) drawPanel(['positions']);
+        }).finally(() => { if (S.ratemapsAsked === asked) S.ratemapsAsked = null; });
+      }
+      units.forEach((u, j) => {
+        const top = y + 22 + j * unitH, maps = S.ratemaps.get(mapKey(u));
+        text(ctx, `${u.unit}`, 12, top + 16, 'bold 14px system-ui', n === 1 ? T.text : colors[j]);
+        S.flightClusters.forEach((c, k) => {
+          const [mx, my] = mapAt(k, top + 22), frame = mapFrame(c, mx, my + 18, mapW, boxH);
+          text(ctx, `flight path ${c}`, mx, my + 13, '13px system-ui', T.text2);
+          mapBox(ctx, frame, mx, my + 18, mapW, boxH, j === 0 && k === 0);
+          if (!maps) return;
+          const peak = drawRateMap(ctx, maps[c], frame, mx, my + 18, mapW, boxH), barY = my + 18 + boxH + 4;
+          for (let i = 0; i < 64; i++) { ctx.fillStyle = jet(i / 63); ctx.fillRect(mx + i * mapW / 64, barY, mapW / 64 + 0.5, 6); }
+          text(ctx, '0', mx, barY + 19, '12px system-ui', T.text2); text(ctx, peak ? rate(peak) : '0 Hz', mx + mapW, barY + 19, '12px system-ui', T.text2, 'right');
+        });
+      });
+      return;
+    }
+    S.flightClusters.forEach((c, k) => {
+      const [mx, my] = mapAt(k, y + 22);
+      text(ctx, `flight path ${c}`, mx, my + 13, '13px system-ui', T.text2);
+      const frame = drawPosition(ctx, c, only.map(k => units[k]), only.map(k => black ? T.text : colors[k]), mx, my + 18, mapW, boxH, {hollow: only.map(k => dashed[k])});
+      mapBox(ctx, frame, mx, my + 18, mapW, boxH, k === 0);
+    });
+  };
+
+  // Sections in order, each at the height it needs
+  const sections = n === 1
+    ? [['head', headH, head], ['foreign', foreignH, foreign], ['table', tableH, table], ['waveforms', waveformsH, waveforms], ['matrix', acgH, autocorrelogramPlot],
+       floorUnit ? ['floor', floorH, floorPlot] : ['amplitude', amplitudeH, amplitude], ['intervals', intervalsH, intervals]]
+    : [['waveforms', waveformsH, waveforms], ['matrix', matrixH, matrix], ['amplitude', amplitudeH, amplitude], ['foreign', foreignH, foreign]]
+      .concat(besideTable ? [['table', Math.max(tableH, evidenceH), y => { table(y); ctx.save(); ctx.translate(ex, 0); evidence(y); ctx.restore(); }]]
+        : [['table', tableH, table]].concat(merged ? [['evidence', evidenceH, evidence]] : []), [['intervals', intervalsH, intervals]]);
+  // Spikes on position stay hidden: spatial firing must not decide merges or labels. A click shows them for this
+  // selection (asked to confirm once per page load), for artefact checks
+  const hiddenPositions = y => {
+    text(ctx, 'Spikes on the flight paths: hidden, so spatial firing cannot sway merges or labels', 12, y + 20, '13px system-ui', T.text2);
+    toggles(ctx, 'positions', [[['show (artefact check)', false, () => {
+      if (!S.positionsConfirmed && !confirm('Show spikes on position?\n\nUse it only to check for artefacts (e.g. firing locked to landing). Deciding merges or labels from spatial firing makes later spatial analyses circular.')) return;
+      S.positionsConfirmed = true; S.showPositions = true; drawPanel(['positions']);
+    }]]], w - 10, y + 20);
+  };
+  if (nc) sections.push(S.showPositions ? ['positions', positionsH, positions] : ['positions', 34, hiddenPositions]);
+  const layout = `${item}|${w}|${sections.map(([section]) => section)}`, keep = only && S.panelLayout === layout;
+  if (!keep) {
+    S.panelCanvases = new Map(sections.map(([section]) => [section, S.panelCanvases.get(section) || document.createElement('canvas')]));
+    sectionsBox.replaceChildren(...S.panelCanvases.values()); S.panelLayout = layout; S.panelPending = new Set();
+  }
+  // Places, then the sections that change: sized now, drawn now when on screen, else on the next frame
+  let y = 0;
+  for (const [section, h] of sections) { at[section] = y; size[section] = Math.ceil(h); y += Math.ceil(h); }
+  const redrawn = sections.filter(([section]) => !keep || only.includes(section) || heights[section] !== size[section] || S.panelPending.has(section));
+  for (const [section] of redrawn) { const canvas = S.panelCanvases.get(section); canvas.dataset.section = section; setup(canvas, w, size[section]); S.panelPending.add(section); }
+  compareBox.scrollTop = atTop && at[atTop] !== undefined ? at[atTop] + (size[atTop] === heights[atTop] ? scrolled - before[atTop] : 0) : 0;
+  let ctx;
+  const paint = ([section, , drawSection]) => { ctx = S.panelCanvases.get(section).getContext('2d'); S.panelPending.delete(section); drawSection(0); };
+  const view = [compareBox.scrollTop, compareBox.scrollTop + compareBox.clientHeight], visible = ([section]) => at[section] < view[1] && at[section] + size[section] > view[0];
+  redrawn.filter(visible).forEach(paint);
+  const later = redrawn.filter(s => !visible(s));
+  if (later.length) S.panelFrame = requestAnimationFrame(() => { if (S.panelKey === key && S.panelLayout === layout) later.filter(([section]) => S.panelPending.has(section)).forEach(paint); });
+  // Kilosort's test on a merge that is not a proposed group comes from the server, once
+  if (merged && merged.rp_label === undefined && !S.ks.has(chosen.map(u => u.members).join('|'))) {
+    const members = chosen.map(u => u.members).join('|');
+    S.ks.set(members, {});
+    getJSON(`/merged/${S.name}?units=${S.sel.join(',')}`).then(ks => {
+      // An answer for units a decision has changed meanwhile is dropped
+      if (!ks.pairs) return S.ks.delete(members);
+      S.ks.set(members, ks); if (S.panelKey === key) drawPanel(['evidence', 'foreign', 'table']);
+    });
+  }
+  if (sharedAnswer && !sharedAnswer.answered) sharedAnswer.asked.then(() => { if (name === S.name && S.panelKey === key) drawPanel(['waveforms']); });
+}
+// A plot title on one line, at 12 px when 13 px is wider than its plot; one wider still is recorded in S.overflow (a page check)
+function title(ctx, string, x, y, width) {
+  ctx.font = '600 13px system-ui';
+  text(ctx, string, x, y, ctx.measureText(string).width > width ? '600 12px system-ui' : '600 13px system-ui', T.text);
+  if (ctx.measureText(string).width > width) S.overflow.push(string);
+}
+// Median Kilosort amplitude of an original unit's spikes, from its sorted amplitudes
+function medianOf(unit) {
+  if (!S.sortedAmps.has(unit)) S.sortedAmps.set(unit, Float32Array.from(S.amps.get(unit)).sort());
+  const sorted = S.sortedAmps.get(unit);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+// Mean waveforms of several units on the union of their display sites, so that an overlay has every unit on every
+// site: asked once per set of units and version
+function loadShared(units) {
+  const ids = units.map(u => u.unit).join(','), sharedKey = `${ids}|${S.version}`, name = S.name;
+  if (!S.shared.has(sharedKey)) {
+    const answer = {traces: null, answered: false};
+    answer.asked = getJSON(`/shared/${name}?units=${ids}`).then(got => {
+      answer.answered = true;
+      // A decision made meanwhile changes the units; that answer is dropped
+      if (name !== S.name || !got.waveforms) return;
+      answer.traces = new Map(units.map(u => [u.unit, {value: (t, c) => got.waveforms[u.unit][t][c], site: c => got.xy[c], nt: got.waveforms[u.unit].length, nc: got.xy.length}]));
+    });
+    S.shared.set(sharedKey, answer);
+  }
+  return S.shared.get(sharedKey);
+}
+// Unit ids in their colours, ending at `right`, on a pad of the background
+function idKeyWidth(ctx, units) { ctx.font = 'bold 14px system-ui'; return units.reduce((sum, u) => sum + ctx.measureText(`${u.unit}`).width + 10, -10); }
+function idKey(ctx, units, colors, right, y) {
+  let x = right - idKeyWidth(ctx, units);
+  ctx.fillStyle = T.bg; ctx.globalAlpha = 0.8; ctx.fillRect(x - 4, y - 15, right - x + 8, 20); ctx.globalAlpha = 1;
+  units.forEach((u, k) => { text(ctx, `${u.unit}`, x, y, 'bold 14px system-ui', colors[k]); x += ctx.measureText(`${u.unit}`).width + 10; });
+}
+
+// Keys and clicks run strictly in the order they were made, each on the selection the earlier ones left
+function onScreen(line) { return line.y + line.h > list.scrollTop && line.y < list.scrollTop + list.clientHeight; }
+async function unmerge(unit) {
+  const answer = await act({kind: 'unmerge', unit});
+  if (answer) show(answer.touched);
+}
+// What the panel of the next open group after the focus needs, asked or computed ahead of j or e reaching it: the
+// union of sites, the footprints, the single spikes in that view, and the pair evidence when the page is idle
+function prefetchNext() {
+  const next = S.lines.slice(focusIndex() + 1).find(l => l.type === 'group' && l.units.length > 1 && openGroup(l.group));
+  if (!next) return;
+  const name = S.name;
+  loadShared(next.units); loadFootprints(next.units.map(u => u.unit));
+  loadTraces(next.units.flatMap(u => u.members.map(m => S.rowOf.get(m))));
+  requestIdleCallback(() => { if (name === S.name && S.byId.has(next.units[0].unit)) timingTop(together(next.units, next.group.pairs).pairs.filter(p => p.notch !== null).slice(0, 12)); });
+}
+async function key(k, sel) {
+  const index = focusIndex(), line = S.lines[index];
+  if (k === 'j' || k === 'e') S.queue.then(prefetchNext);
+  if (k === 'j' || k === 'ArrowDown') return moveFocus(1);
+  if (k === 'k' || k === 'ArrowUp') return moveFocus(-1);
+  if (k === 'ArrowRight') return moveFocus(1, true);
+  if (k === 'ArrowLeft') return moveFocus(-1, true);
+  // e: first the next row of the focused open group below the selection left without a label; then, once the
+  // selection is decided, a unit left in the focused group
+  if (k === 'e') {
+    // A merged unit without a label is the next undecided item
+    const one = sel.length === 1 ? unitOf(sel[0]) : null;
+    if (one && one.members.length > 1 && !one.label) { scrollToFocus(); return status(`merged unit ${one.unit} has no label yet: g m n u f`); }
+    const last = Math.max(...line.units.map((u, i) => sel.includes(u.unit) ? i : -1));
+    const left = line.type === 'group' && openGroup(line.group) && onScreen(line) ? line.units.find((u, i) => i > last && !u.label) : null;
+    if (left) { select([left.unit], left.unit); return scrollToFocus(); }
+    return nextUndecided(sel.every(id => unitOf(id).label));
+  }
+  // Esc: the reference units go; otherwise the focused line is selected again
+  if (k === 'Escape') {
+    if (S.ref.length) return setReferences([]);
+    return line.type === 'group' ? select(line.units.map(u => u.unit), S.focusUnit) : select([S.focusUnit], S.focusUnit);
+  }
+  if (k === ' ' || k === 'shift+Space') { compareBox.scrollTop += (k === ' ' ? 0.9 : -0.9) * compareBox.clientHeight; return; }
+  if (k === '0') { S.gain = 1; remember('gain', S.gain); return drawPanel(['waveforms']); }
+  if (k === 'o') { if (S.view === 'density') return status('density is always side by side'); if (S.sel.length + S.ref.length > 4) return status('more than 4 units are always side by side'); S.overlay[S.view] = !S.overlay[S.view]; return drawPanel(['waveforms']); }
+  if (k === '-' || k === '=' || k === '+') { S.gain = Math.min(8, Math.max(0.25, S.gain * (k === '-' ? 1 / 1.3 : 1.3))); remember('gain', S.gain); return drawPanel(['waveforms']); }
+  if (k === 'b') { S.posBlack = !S.posBlack; remember('posBlack', S.posBlack ? '1' : ''); return drawPanel(['positions']); }
+  if (k === '.' || k === ',') {
+    if (S.rate) return status(', . step the dots view (r)');
+    // null is all the units; then each unit of the panel in turn
+    const count = S.sel.length + S.ref.length + 1, at = S.posOnly === null ? 0 : S.posOnly + 1, next = (at + (k === '.' ? 1 : count - 1)) % count;
+    S.posOnly = next === 0 ? null : next - 1;
+    drawPanel(['positions']);
+    compareBox.scrollTop = S.sectionY.positions;
+    return;
+  }
+  if (k === 'r') { S.rate = !S.rate; remember('rate', S.rate ? '1' : ''); drawPanel(['positions']); compareBox.scrollTop = S.sectionY.positions; return; }
+  if (k === 'w') { S.view = {mean: 'spikes', spikes: 'density', density: 'mean'}[S.view]; remember('view', S.view); return drawPanel(['waveforms']); }
+  if (k === '?') { document.getElementById('help').style.display = 'block'; return; }
+  if (k === 'h') return setRemaining(!S.remaining);
+  if (k === '/') { document.getElementById('goto').focus(); return; }
+  if (k === 's') {
+    if (!sel.length) return status('+ similar: click a unit first');
+    const first = unitOf(sel[0]).members[0], current = new Map(S.units.flatMap(u => u.members.map(m => [m, u.unit])));
+    const ranked = S.meta.ids.map(id => [similarityOf(first, id), current.get(id)]).filter(([, id]) => !S.sel.includes(id) && !S.ref.includes(id)).sort((a, b) => b[0] - a[0]);
+    return setReferences([...S.ref, ...new Set(ranked.slice(0, 6).map(([, id]) => id))].slice(0, S.ref.length + 3));
+  }
+  if (k === 'p') {
+    if (sel.length !== 1) return status('partners: select one unit');
+    const name = S.name, partners = await getJSON(`/partners/${name}?unit=${sel[0]}`);
+    if (name !== S.name) return;
+    const next = partners.find(p => !S.ref.includes(p.unit));
+    if (!next) return status('no more partners within 100 µm');
+    setReferences([...S.ref, next.unit]);
+    return status(`${next.unit} added for comparison${next.qualifies ? ': a possible merge' : ': nearby, not a possible merge'}`);
+  }
+  if (k === 'z') {
+    if (!S.nEvents) return status('nothing to undo');
+    const labelled = new Map(S.units.map(u => [u.unit, u.label]));
+    const answer = await act({kind: 'undo'});
+    if (!answer) return;
+    show(answer.touched);
+    // Undoing labels: where the units went back to
+    const relabelled = answer.touched.filter(id => S.byId.has(id) && labelled.has(id) && labelled.get(id) !== unitOf(id).label);
+    if (relabelled.length) status(`undone: ${relabelled.length} unit${relabelled.length > 1 ? 's' : ''} back to ${relabelled.every(id => !unitOf(id).label) ? 'unlabelled' : 'their previous labels'}`);
+    return;
+  }
+  // A digit on the whole group, or on none of it, selects that row alone; then each digit adds or removes its row
+  if (/^[1-9]$/.test(k)) {
+    if (line.type !== 'group' || !line.units[k - 1] || line.units.length < 2) return;
+    const id = line.units[k - 1].unit, mine = S.sel.filter(u => line.units.some(v => v.unit === u));
+    if (!mine.length || (mine.length === line.units.length && S.sel.length === mine.length)) return select([id], id);
+    const next = S.sel.includes(id) ? S.sel.filter(u => u !== id) : [...S.sel.filter(u => line.units.some(v => v.unit === u)), id];
+    return next.length ? select(next, next[0]) : status('one unit stays selected');
+  }
+  if (k === 't' || k === 'T') {
+    const u = sel.length === 1 ? unitOf(sel[0]) : null;
+    if (!u || u.members.length !== 1 || u.members[0] !== u.unit) return status('Amplitude floor: select one unmerged unit');
+    if (k === 'T') return u.floor === undefined ? status('this unit has no amplitude floor') : act({kind: 'floor', unit: u.unit, floor: null});
+    if (!S.floorDraft || S.floorDraft.unit !== u.unit) { compareBox.scrollTop = S.sectionY.floor; return status('click in the plot to set the floor', false, true); }
+    return act({kind: 'floor', unit: u.unit, floor: S.floorDraft.floor});
+  }
+  if (!['F', 'M', 'U', 'g', 'm', 'n', 'u', 'f', 'Backspace', 'a'].includes(k)) return;
+
+  // Decisions need their target on screen
+  if (k !== 'a' && sel.length && focusShown() && !onScreen(line)) { scrollToFocus(); return status('the selection was off screen — it is shown now; press the key again', false, true); }
+  if (k === 'F') return sel.length ? act({kind: 'flag', units: sel}) : status('Flag: click a unit first');
+  if (k === 'U') return sel.length === 1 && unitOf(sel[0]).members.length > 1 ? unmerge(sel[0]) : status('Unmerge: select one merged unit first');
+  if (k === 'M') {
+    if (sel.length < 2) return status('Merge: select two or more units (click a merge group, or ctrl+click units)');
+    const answer = await act({kind: 'merge', units: sel});
+    if (answer) { show(answer.touched); status(`merged → ${S.sel[0]}: label it (g m n)`); }
+  } else if (k === 'a') {
+    const rows = S.lines.filter(l => l.type === 'tiles' && l.section !== 'non_soma' && l.y >= list.scrollTop && l.y + l.h <= list.scrollTop + list.clientHeight);
+    const first = rows.find(l => l.units.some(u => !u.label));
+    if (!first) {
+      const next = S.lines.find(l => l.type === 'tiles' && l.section !== 'non_soma' && l.y > list.scrollTop && l.units.some(u => !u.label));
+      if (next) { list.scrollTop = next.y - 40; return status('moved to the next unlabelled tiles — press a again to accept them', false, true); }
+      return status(document.getElementById('depth').checked ? 'Accept screen works in the sectioned list, not in depth order' : 'Accept screen: no unlabelled good, mua or noise tiles are left');
+    }
+    return acceptScreen(first.section);
+  } else {
+    if (!sel.length) return status('Label: click a unit, a tile or a group first');
+    const label = {g: 'good', m: 'mua', n: 'noise', u: 'unstable', f: 'few', Backspace: null}[k];
+    if (label === null && sel.every(u => !unitOf(u).label)) return status('no label to remove');
+    if (label && sel.every(u => unitOf(u).label === label)) return status(`already ${label}`);
+    // A label on a whole open merge group also keeps it apart, in the same decision
+    const apart = label && S.groups.some(g => g.section === 'groups' && openGroup(g) && g.units.length === sel.length && sel.every(id => g.units.includes(id)));
+    // Units of the same tile sections left out of a label on more than 3 units are named
+    const sections = new Set(sel.map(id => unitOf(id).section)), leftOut = S.lines.filter(l => l.type === 'tiles' && sections.has(l.section)).flatMap(l => l.units).filter(u => !S.chosen.has(u.unit)).map(u => u.unit);
+    // The selection stays where it is; e goes on to the next undecided item
+    if (!await act({kind: 'label', labels: Object.fromEntries(sel.map(u => [u, label])), ...(apart ? {keep: sel} : {})})) return;
+    if (label && sel.length > 3 && leftOut.length) status(`${sel.length} → ${label} · left out: ${leftOut.slice(0, 6).join(', ')}${leftOut.length > 6 ? ` and ${leftOut.length - 6} more` : ''}`);
+  }
+}
+// The unlabelled tiles of a section fully on screen that have a proposal
+const acceptable = section => S.lines.filter(l => l.type === 'tiles' && l.section === section && l.y >= list.scrollTop && l.y + l.h <= list.scrollTop + list.clientHeight)
+  .flatMap(l => l.units).filter(u => !u.label && u.proposed);
+// Accept a section's tiles on screen as proposed, then on to the next unlabelled unit, so that the next a accepts the next screen
+async function acceptScreen(section) {
+  const todo = acceptable(section);
+  if (!todo.length) return status('Accept screen: no unlabelled tiles of this section are fully on screen');
+  if (await act({kind: 'label', labels: Object.fromEntries(todo.map(u => [u.unit, u.proposed]))})) { S.focusUnit = todo[todo.length - 1].unit; nextUndecided(false); }
+}
+// Keys and clicks pass through one queue; a failure is reported and the table reloaded
+function enqueue(run) {
+  S.queue = S.queue.then(run).catch(async error => {
+    status(`ERROR: ${error.message || error} — reloading the session state`, true);
+    await applyTable(await getJSON(`/table/${S.name}`));
+  });
+}
+const press = k => { if (!S.loading) { status(''); enqueue(() => key(k, [...S.sel])); } };
+list.addEventListener('scroll', () => { if (!S.scrolling) { S.scrolling = true; requestAnimationFrame(() => { S.scrolling = false; drawList(); }); } });
+// What a click at a place in a line does: the units it selects and the box it covers (shaded under the pointer).
+// mods: shift (every unit from the last clicked one to this one, in list order), ctrl (add or remove this unit)
+function clickTarget(line, cx, cy, mods) {
+  const w = list.clientWidth;
+  if (line.type === 'header') {
+    // A section's header selects all its units (not merge groups); its accept button accepts the tiles on screen
+    if (line.accept && cx >= line.acceptBox[0] && cx <= line.acceptBox[1]) return {accept: line.section, box: [line.acceptBox[0], 4, line.acceptBox[1] - line.acceptBox[0], line.h - 8]};
+    const ids = ['groups', 'possible'].includes(line.section) ? [] : sectionUnits(line.section).map(u => u.unit);
+    return ids.length ? {ids, focus: ids[0], box: [0, 0, w, line.h]} : null;
+  }
+  const k = line.type === 'tiles' ? Math.floor(cx / S.tileW) : line.type === 'group' && !line.collapsed && cy > line.head ? Math.floor((cy - line.head) / ROW) : -1;
+  const u = line.type === 'unit' ? line.units[0] : line.units[k], whole = line.units.map(v => v.unit);
+  const box = line.type === 'tiles' ? [k * S.tileW, 0, S.tileW - 2, line.h - 2] : k >= 0 ? [0, line.head + k * ROW, w, ROW] : line.type === 'unit' ? [0, 0, w, ROW] : [0, 0, w, line.h];
+  const inGroup = line.type === 'group' && S.sel.length && S.sel.every(id => whole.includes(id));
+  if (!u) return {ids: whole, focus: whole[0], box: [0, 0, w, line.h]};
+  // Shift: the span from the last clicked unit
+  if (mods.shift && S.chosen.size) {
+    const order = S.lines.flatMap(l => l.type === 'header' ? [] : l.units.map(v => v.unit)), from = order.indexOf(S.focusUnit), to = order.indexOf(u.unit);
+    if (from >= 0) return {ids: order.slice(Math.min(from, to), Math.max(from, to) + 1), focus: S.focusUnit, box};
+  }
+  // Ctrl, or the tick box of a group row: add or remove this unit
+  if (mods.ctrl || (line.type === 'group' && whole.length > 1 && cx < CHECK_W)) {
+    return S.chosen.has(u.unit) ? {ids: S.sel.filter(id => id !== u.unit), box} : {ids: [...S.sel, u.unit], focus: u.unit, box};
+  }
+  // A tile selects itself. A row of a group that is not the selection selects the group; a row of the selected group selects that unit.
+  if (line.type === 'tiles' || line.type === 'unit' || (inGroup && whole.length > 1)) return {ids: [u.unit], focus: u.unit, box};
+  return {ids: whole, focus: whole[0], box: [0, 0, w, line.h]};
+}
+function placeIn(e) {
+  const index = +e.target.dataset.index, line = S.lines[index], box = e.target.getBoundingClientRect(), zoom = box.width / e.target.offsetWidth;
+  return {line, target: clickTarget(line, (e.clientX - box.left) / zoom, (e.clientY - box.top) / zoom, {shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey})};
+}
+sectionsBox.addEventListener('click', e => {
+  const canvas = e.target, at = canvas.getBoundingClientRect(), px = (e.clientX - at.left) / (at.width / canvas.offsetWidth), py = (e.clientY - at.top) / (at.height / canvas.offsetHeight);
+  // A view control in a plot's title line; a dot of the section plot selects its unit
+  const toggle = (S.toggles[canvas.dataset.section] || []).find(b => px >= b.x0 && px <= b.x1 && py >= b.y0 && py <= b.y1);
+  if (toggle) return toggle.action();
+  const dot = canvas.dataset.section === 'many' ? S.dotHits.find(d => Math.hypot(px - d.x, py - d.y) <= 6) : null;
+  if (dot) return enqueue(() => { select([dot.unit], dot.unit); scrollToFocus(); });
+  // A partner id adds that unit for reference
+  const partner = canvas.dataset.section === 'head' && S.sel.length === 1 && !S.ref.length ? (S.partnerHits || []).find(h => px >= h.x0 && px <= h.x1 && py >= h.y0 && py <= h.y1) : null;
+  if (partner) return enqueue(() => setReferences([partner.unit]));
+  // Clicks map through the lower part of the axis
+  const plot = S.floorPlot;
+  if (canvas.dataset.section !== 'floor' || !plot || py < plot.axis.lowY || py > plot.axis.lowY + plot.axis.lowH) return;
+  status('');
+  const floor = plot.axis.fromY(py), name = S.name;
+  S.floorDraft = {unit: plot.unit, floor};
+  drawPanel(['floor']);
+  // A failed preview is reported, never stored
+  fetch(`/floor/${name}?unit=${plot.unit}&floor=${floor}`).then(async r => { const preview = await r.json(); if (!r.ok) throw new Error(preview.error); return preview; }).then(preview => {
+    if (S.floorDraft && S.floorDraft.unit === plot.unit && S.floorDraft.floor === floor) { S.floorDraft.preview = preview; drawPanel(['floor']); }
+  });
+});
+const hover = document.getElementById('hover');
+list.addEventListener('mousemove', e => {
+  const {line, target} = e.target.dataset.index && !S.loading ? placeIn(e) : {};
+  // Over an accept button, the tiles it would accept are outlined
+  const accepting = target && target.accept;
+  if (accepting !== S.acceptShown) {
+    S.acceptShown = accepting;
+    for (const box of [...list.querySelectorAll('.accept')]) box.remove();
+    if (accepting) for (const l of S.lines.filter(l => l.type === 'tiles' && l.section === accepting && l.y >= list.scrollTop && l.y + l.h <= list.scrollTop + list.clientHeight)) l.units.forEach((u, k) => {
+      if (u.label || !u.proposed) return;
+      const box = document.createElement('div');
+      box.className = 'accept'; box.style.left = k * S.tileW + 'px'; box.style.top = l.y + 'px'; box.style.width = S.tileW - 2 + 'px'; box.style.height = l.h - 2 + 'px';
+      list.appendChild(box);
+    });
+  }
+  if (!target) { hover.style.display = 'none'; return; }
+  const [x, y, w, h] = target.box;
+  hover.style.display = 'block'; hover.style.left = x + 'px'; hover.style.top = line.y + y + 'px'; hover.style.width = w + 'px'; hover.style.height = h + 'px';
+});
+list.addEventListener('mouseleave', () => { hover.style.display = 'none'; S.acceptShown = null; for (const box of [...list.querySelectorAll('.accept')]) box.remove(); });
+list.addEventListener('click', e => {
+  if (!e.target.dataset.index || S.loading || e.detail > 1) return;
+  status('');
+  const mods = {shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey}, index = +e.target.dataset.index, box = e.target.getBoundingClientRect(), zoom = box.width / e.target.offsetWidth;
+  const cx = (e.clientX - box.left) / zoom, cy = (e.clientY - box.top) / zoom;
+  // The target is worked out when the click runs, on the selection the earlier keys and clicks left
+  enqueue(() => {
+    const target = clickTarget(S.lines[index], cx, cy, mods);
+    if (!target) return;
+    if (target.accept) return acceptScreen(target.accept);
+    if (!target.ids.length) return status('one unit stays selected');
+    select(target.ids, target.focus);
+    hover.style.display = 'none';
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const help = document.getElementById('help'), box = document.getElementById('goto');
+  // Help: Esc or ? closes it, the paging keys scroll it, other keys do nothing
+  if (help.style.display === 'block') {
+    e.preventDefault();
+    if (e.key === 'Escape' || e.key === '?') help.style.display = 'none';
+    const page = 0.9 * help.clientHeight;
+    help.scrollTop += {ArrowDown: 40, ArrowUp: -40, PageDown: page, PageUp: -page, ' ': e.shiftKey ? -page : page}[e.key] || 0;
+    return;
+  }
+  if (e.target === box) {
+    if (e.key === 'Escape') { box.value = ''; box.blur(); }
+    if (e.key !== 'Enter') return;
+    const id = parseInt(box.value, 10), found = S.units.find(u => u.unit === id || u.members.includes(id));
+    const add = e.shiftKey;
+    box.value = ''; box.blur();
+    return enqueue(() => { if (!found) return status(Number.isNaN(id) ? 'go to unit: type a unit number' : `no unit ${id} in this session`, true); show(add ? [...new Set([...S.sel, found.unit])] : [found.unit]); });
+  }
+  // A dropdown keeps the keys that work it; any other key leaves it and works on the page
+  if (e.target.tagName === 'SELECT') {
+    if (['Enter', 'Escape', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    e.preventDefault(); e.target.blur();
+  }
+  if ([' ', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Backspace', '/'].includes(e.key)) e.preventDefault();
+  // Letters by physical key, so Caps Lock changes nothing; merge and unmerge need shift
+  const letter = e.code.startsWith('Key') ? e.code[3].toLowerCase() : null;
+  const k = letter ? (e.shiftKey ? {m: 'M', u: 'U', t: 'T', f: 'F'}[letter] || '' : letter) : e.key === 'Delete' ? 'Backspace' : e.key === ' ' && e.shiftKey ? 'shift+Space' : e.key;
+  // A held-down key repeats only for moving through the list and the panel
+  if (e.repeat && !['j', 'k', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', ' ', 'shift+Space'].includes(k)) return;
+  press(k);
+});
+// A click closes help, except on the heading that opens the details
+document.getElementById('help').addEventListener('click', e => { if (!e.target.closest('summary')) e.currentTarget.style.display = 'none'; });
+// The counts left to review jump to the first open group, open pair, unit without a label or flagged unit
+document.getElementById('left').addEventListener('click', e => {
+  const link = e.target.closest('a');
+  if (!link) return;
+  enqueue(() => {
+    const busy = new Set(S.groups.filter(openGroup).flatMap(g => g.units));
+    if (link.dataset.flagged) return show([S.units.find(u => u.flagged).unit]);
+    if (link.dataset.units) return show([S.lines.flatMap(l => l.type === 'header' ? [] : l.units).find(u => !u.label && !busy.has(u.unit)).unit]);
+    const index = S.lines.findIndex(l => l.type === 'group' && l.group.section === link.dataset.section && openGroup(l.group));
+    if (index < 0) return status('that section is only in the sectioned list (untick depth order)');
+    selectLine(index); list.scrollTop = S.lines[index].y - 40; drawList();
+  });
+});
+// Remaining only: the list without what is decided
+// The decided units and groups are taken when it is ticked, so later decisions stay in view until it is ticked again
+function setRemaining(on) {
+  S.done = {units: new Set(S.units.filter(u => u.label).map(u => u.unit)), groups: new Set(S.groups.filter(g => !openGroup(g) && g.units.every(id => unitOf(id).label)).map(g => g.units.join('+')))};
+  S.remaining = on; remember('remaining', on ? '1' : '');
+  document.getElementById('remaining').checked = on;
+  buildLines(); assignColors(); drawAll(); scrollToFocus();
+}
+document.getElementById('remaining').addEventListener('change', e => { e.target.blur(); enqueue(() => setRemaining(e.target.checked)); });
+document.getElementById('panel').addEventListener('click', e => {
+  const button = e.target.closest('button[data-key]');
+  if (button) { button.blur(); press(button.dataset.key); }
+});
+document.getElementById('export').addEventListener('click', e => {
+  e.target.blur();
+  const undecided = S.units.filter(u => !u.label).length;
+  if (undecided && S.exportAsked !== S.version) { S.exportAsked = S.version; return status(`${undecided} units have no label and will be exported without one — click Export again to go ahead`, false, true); }
+  enqueue(async () => {
+    status('exporting…', false, true);
+    const response = await fetch('/export', {method: 'POST', body: JSON.stringify({session: S.name})}), answer = await response.json();
+    status((response.ok ? `exported to ${answer.folder} — ` : 'EXPORT FAILED: ') + answer.message, !response.ok);
+  });
+});
+document.getElementById('helpButton').addEventListener('click', e => { e.stopPropagation(); e.target.blur(); press('?'); });
+document.getElementById('depth').addEventListener('change', e => { e.target.blur(); remember('depth', e.target.checked ? '1' : ''); enqueue(() => { buildLines(); assignColors(); drawAll(); scrollToFocus(); }); });
+document.getElementById('session').addEventListener('change', e => { e.target.blur(); enqueue(() => openSession(e.target.value)); });
+function redrawAll() { if (!S.loading) { S.paths.clear(); buildLines(); assignColors(); drawAll(); } }
+// The panel's buttons lose their key letters (kept in each title) when with them the buttons take more than one line
+function narrow() {
+  document.body.classList.remove('narrow');
+  const tops = new Set([...document.querySelectorAll('#panel .bar > button, #panel .bar > .seg')].filter(e => e.offsetWidth).map(e => e.getBoundingClientRect().top));
+  document.body.classList.toggle('narrow', tops.size > 1);
+}
+window.addEventListener('resize', () => { narrow(); redrawAll(); });
+function setTheme(dark) {
+  T = dark ? THEMES.dark : THEMES.light;
+  document.body.classList.toggle('dark', dark);
+  for (const button of document.querySelectorAll('button[data-label]')) button.style.borderLeftColor = T.ink[button.dataset.label];
+  remember('dark', dark ? '1' : '');
+}
+setTheme(recall('dark') === '1');
+document.getElementById('depth').checked = recall('depth') === '1';
+S.view = recall('view') || 'mean';
+S.rate = recall('rate') === '1';
+S.posBlack = recall('posBlack') === '1';
+S.gain = +recall('gain') || 1;
+S.remaining = recall('remaining') === '1';
+document.getElementById('remaining').checked = S.remaining;
+document.getElementById('dark').addEventListener('click', e => { e.target.blur(); setTheme(T !== THEMES.dark); redrawAll(); });
+const zoom = document.getElementById('zoom');
+zoom.value = recall('zoom') || (innerWidth >= 2400 ? '1.15' : '1');
+document.body.style.zoom = zoom.value;
+narrow();
+zoom.addEventListener('change', e => { e.target.blur(); remember('zoom', zoom.value); document.body.style.zoom = zoom.value; narrow(); redrawAll(); });
+getJSON('/sessions').then(names => {
+  document.getElementById('session').innerHTML = names.map(n => `<option>${n}</option>`).join('');
+  enqueue(() => openSession(names[0]));
+});
+</script></body></html>

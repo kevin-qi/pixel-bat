@@ -1,0 +1,23 @@
+P6. Log of every candidate split, including those the CCG dip vetoes, postProcess/splitAllClusters.m after :32 and :120.
+rez.split_log rows: unit, spikes, Q12, R, nremove, plow, phigh. rez.split_low: rows of rez.st3 in the first half. Logging only.
+
+diff --git a/postProcess/splitAllClusters.m b/postProcess/splitAllClusters.m
+index 27ef65b..6e13b15 100644
+--- a/postProcess/splitAllClusters.m
++++ b/postProcess/splitAllClusters.m
+@@ -30,6 +30,7 @@ iW = squeeze(int32(iW));
+ isplit = 1:Nfilt; % keep track of original cluster for each cluster. starts with all clusters being their own origin.
+ dt = 1/1000;
+ nccg = 0;
++rez.split_log = zeros(0,7); rez.split_low = {};
+ 
+ while ik<Nfilt
+     if rem(ik, 100)==1
+@@ -118,6 +119,7 @@ while ik<Nfilt
+     [K, Qi, Q00, Q01, rir] = ccg(ss(ilow), ss(~ilow), 500, dt); % compute the cross-correlogram between spikes in the putative new clusters
+     Q12 = min(Qi/max(Q00, Q01)); % refractoriness metric 1
+     R = min(rir);                % refractoriness metric 2
++    rez.split_log(end+1,:) = [ik nSpikes Q12 R nremove plow phigh]; rez.split_low{end+1} = uint32(isp(ilow));
+ 
+     % if the CCG has a dip, don't do the split.
+     % These thresholds are consistent with the ones from merges.

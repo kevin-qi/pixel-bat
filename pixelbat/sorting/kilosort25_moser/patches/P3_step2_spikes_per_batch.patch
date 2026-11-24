@@ -1,0 +1,15 @@
+P3. Step 2: spikes kept per batch, CUDA/mexMPnu8.cu:25. Old 100000, new 400000. Not a Moser change; needed so P2 cannot bind this cap.
+
+diff --git a/CUDA/mexMPnu8.cu b/CUDA/mexMPnu8.cu
+index 4be2c19..b3b7e4e 100644
+--- a/CUDA/mexMPnu8.cu
++++ b/CUDA/mexMPnu8.cu
+@@ -22,7 +22,7 @@ using namespace std;
+     #include "mexNvidia_quicksort.cu"
+ #endif
+             
+-const int  Nthreads = 1024, maxFR = 100000, NrankMax = 3, nmaxiter = 500, NchanMax = 32;
++const int  Nthreads = 1024, maxFR = 400000, NrankMax = 3, nmaxiter = 500, NchanMax = 32;
+ 
+ //////////////////////////////////////////////////////////////////////////////////////////
+ __global__ void	spaceFilter(const double *Params, const float *data, const float *U,

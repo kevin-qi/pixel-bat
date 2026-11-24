@@ -1,9 +1,9 @@
+#!/usr/bin/python
+#Requires numpy to be installed. re and sys are defaults for python
+#assumes python 2.7
 import numpy as np
 import re
 from sys import argv
-
-
-#region Trodes readTrodesExtractedDataFile (from Trodes 2-5-3)
 # Main function
 def readTrodesExtractedDataFile(filename):
     with open(filename, 'rb') as f:
@@ -18,8 +18,14 @@ def readTrodesExtractedDataFile(filename):
                 line = line.decode('ascii').strip()
                 # filling in fields dict
                 if line != '<End settings>':
-                    vals = line.split(': ')
-                    fieldsText.update({vals[0].lower(): vals[1]})
+                    if ': ' in line:
+                        key, val = line.split(': ', 1)
+                    elif ':' in line:
+                        key, val = line.split(':', 1)
+                        val = val.strip()
+                    else:
+                        continue
+                    fieldsText.update({key.lower(): val})
                 # End of settings block, signal end of fields
                 else:
                     fields = False
@@ -63,4 +69,15 @@ def parseFields(fieldstr):
             typearr.append((str(fieldname), fieldtype, repeats))
     return np.dtype(typearr)
 
-#endregion
+
+
+# Testing function here---------------------
+# fields = readTrodesExtractedDataFile('16ChannelRec.spikes_nt10.dat')
+# print(fields['data'])
+
+if __name__ == '__main__':
+    if argv.__len__() > 1:
+        np.set_printoptions(threshold='nan')
+        fields = readTrodesExtractedDataFile(argv[1])
+        print(fields['data'])
+

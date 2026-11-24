@@ -2,3 +2,10 @@ data/
 **/*.asv
 
 **/*/debugLogs/
+# Compiled once per machine by build_mex.m
+*.mexa64
+*.mexw64
+# Local environment
+.venv/
+*.egg-info/
+__pycache__/

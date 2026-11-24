@@ -1,5 +1,8 @@
 # PixelBat
 
+Spike sorting and curation for the lab: see `SHARING.md` (installation and quick start), `pixelbat/sorting/README.md`
+and `pixelbat/curation/README.md`. The steps below are the older MATLAB route.
+
 ## Installation
 
 ## Usage

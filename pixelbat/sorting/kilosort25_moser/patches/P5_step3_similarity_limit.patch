@@ -1,0 +1,15 @@
+P5. Step 3: upper limit on template similarity, postProcess/splitAllClusters.m:139. Old 0.9, new 1.0 (Gardner et al. 2022).
+
+diff --git a/postProcess/splitAllClusters.m b/postProcess/splitAllClusters.m
+index a4a3c30..27ef65b 100644
+--- a/postProcess/splitAllClusters.m
++++ b/postProcess/splitAllClusters.m
+@@ -136,7 +136,7 @@ while ik<Nfilt
+     r0 = 2*abs(n1 - n2)/(n1 + n2); % similarity of amplitudes
+ 
+     % if the templates are correlated, and their amplitudes are similar, stop the split!!!
+-    if cc(1,2)>.9 && r0<.2
++    if cc(1,2)>1.0 && r0<.2
+         continue;
+     end
+ 

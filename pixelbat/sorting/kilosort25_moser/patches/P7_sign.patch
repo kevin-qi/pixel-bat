@@ -1,0 +1,16 @@
+P7. Spike polarity per recording, preProcess/gpufilter.m:18. Kilosort 2.5 detects negative peaks only; ops.sign = -1 inverts
+a recording with positive-going spikes, +1 leaves it. A missing ops.sign crashes here.
+
+diff --git a/preProcess/gpufilter.m b/preProcess/gpufilter.m
+index 3b77654..e363de6 100644
+--- a/preProcess/gpufilter.m
++++ b/preProcess/gpufilter.m
+@@ -15,7 +15,7 @@ end
+ 
+ dataRAW = gpuArray(buff); % move int16 data to GPU
+ dataRAW = dataRAW';
+-dataRAW = single(dataRAW); % convert to float32 so GPU operations are fast
++dataRAW = ops.sign * single(dataRAW); % convert to float32 so GPU operations are fast
+ dataRAW = dataRAW(:, chanMap); % subsample only good channels
+ 
+ % subtract the mean from each channel

@@ -1,0 +1,23 @@
+M1. Ordered log of the merges find_merges(rez, 1) makes, postProcess/find_merges.m after :16 and :48.
+rez.merge_log rows: unit merged, unit merged into, Q, R. Logging only.
+
+diff --git a/postProcess/find_merges.m b/postProcess/find_merges.m
+index 3e9dcc4..d5cfdca 100644
+--- a/postProcess/find_merges.m
++++ b/postProcess/find_merges.m
+@@ -14,6 +14,7 @@ nspk = accumarray(rez.st3(:,2), 1, [Nk, 1], @sum);
+ [~, isort] = sort(nspk); % we traverse the set of neurons in ascending order of firing rates
+ 
+ fprintf('initialized spike counts\n')
++rez.merge_log = zeros(0,4);
+ 
+ if ~flag
+   % if the flag is off, then no merges are performed
+@@ -46,6 +47,7 @@ for j = 1:Nk
+                 % now merge j into i and move on
+                 rez.st3(rez.st3(:,2)==isort(j),2) = i; % simply overwrite all the spikes of neuron j with i (i>j by construction)
+                 nspk(i) = nspk(i) + nspk(isort(j)); % update number of spikes for cluster i
++                rez.merge_log(end+1,:) = [isort(j) i Q R];
+                 fprintf('merged %d into %d \n', isort(j), i)
+                 % YOU REALLY SHOULD MAKE SURE THE PC CHANNELS MATCH HERE
+                 break; % if a pair is found, we don't need to keep going (we'll revisit this cluster when we get to the merged cluster)

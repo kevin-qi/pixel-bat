@@ -1,0 +1,52 @@
+I1. Convergence of the matching pursuit: CUDA/mexMPnu8.cu returns as 11th output the existing d_count (int32, nmaxiter = 500:
+entry k+1 is the cumulative spike count of the batch after iteration k, entry 1 is 0, entries past nInnerIter+1 are 0).
+The two callers store it per batch: rez.count_learn (columns in learning order, rez.iorig), rez.count_final (columns = batches).
+Also stored: rez.Nfilt_learn (templates entering each learning batch; equals ops.Nfilt when the template cap bound) and rez.nInnerIter.
+
+diff --git a/CUDA/mexMPnu8.cu b/CUDA/mexMPnu8.cu
+index b3b7e4e..999a4cf 100644
+--- a/CUDA/mexMPnu8.cu
++++ b/CUDA/mexMPnu8.cu
+@@ -1145,6 +1145,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
+   cudaMemcpy(errmsg, d_errmsg, 1 * sizeof(int),   cudaMemcpyDeviceToHost);
+   cudaFree(d_errmsg);
+ 
++  const mwSize dimCount[] 	= {nmaxiter,1};
++  plhs[10] 	= mxCreateNumericArray(2, dimCount, mxINT32_CLASS, mxREAL);
++  cudaMemcpy(mxGetData(plhs[10]), d_count, nmaxiter * sizeof(int), cudaMemcpyDeviceToHost);
++
+   if (useStableMode) {
+     //only free the memory if it was allocated
+     cudaFree(d_draw64);
+diff --git a/mainLoop/learnTemplates.m b/mainLoop/learnTemplates.m
+index beeda45..7ec9e85 100644
+--- a/mainLoop/learnTemplates.m
++++ b/mainLoop/learnTemplates.m
+@@ -153,9 +153,10 @@ for ibatch = 1:niter
+     % gets scores for the template fits to each spike (vexp), outputs the average of
+     % waveforms assigned to each cluster (dWU0),
+     % and probably a few more things I forget about
+-    [st0, id0, x0, featW, dWU0, drez, nsp0, featPC, vexp, errmsg] = ...
++    [st0, id0, x0, featW, dWU0, drez, nsp0, featPC, vexp, errmsg, count] = ...
+         mexMPnu8(Params, dataRAW, single(U), single(W), single(mu), iC-1, iW-1, UtU, iList-1, ...
+         wPCA);
++    rez.count_learn(:, ibatch) = count; rez.Nfilt_learn(ibatch) = Nfilt;
+     
+     
+     % errmsg returns 1 if caller requested "stableMode" but mexMPnu8 was
+diff --git a/mainLoop/trackAndSort.m b/mainLoop/trackAndSort.m
+index 9b3b2db..593c13e 100644
+--- a/mainLoop/trackAndSort.m
++++ b/mainLoop/trackAndSort.m
+@@ -161,9 +161,10 @@ for ibatch = 1:niter
+     % waveforms assigned to each cluster (dWU0),
+     % and probably a few more things I forget about
+     
+-    [st0, id0, x0, featW, dWU0, drez, nsp0, featPC, vexp, errmsg] = ...
++    [st0, id0, x0, featW, dWU0, drez, nsp0, featPC, vexp, errmsg, count] = ...
+         mexMPnu8(Params, dataRAW, single(U), single(W), single(mu), iC-1, iW-1, UtU, iList-1, ...
+         wPCA);
++    rez.count_final(:, ibatch) = count; rez.nInnerIter = nInnerIter;
+ 
+     
+     % fix for spike holes issue #594 ------------------------------------

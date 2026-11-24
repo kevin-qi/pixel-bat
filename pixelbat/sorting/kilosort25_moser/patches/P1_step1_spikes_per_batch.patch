@@ -1,0 +1,16 @@
+P1. Step 1 (drift detection): spikes kept per batch, CUDA/spikedetector3.cu:20. Old 10000, new 1000000 (pilot).
+To change the value, edit the number after maxFR on the single + line below.
+
+diff --git a/CUDA/spikedetector3.cu b/CUDA/spikedetector3.cu
+index 00de71f..f39399d 100644
+--- a/CUDA/spikedetector3.cu
++++ b/CUDA/spikedetector3.cu
+@@ -17,7 +17,7 @@
+ #include <iostream>
+ using namespace std;
+ 
+-const int  Nthreads = 1024,  NrankMax = 6, maxFR = 10000, nt0max=81, NchanMax = 17, nsizes = 5;
++const int  Nthreads = 1024,  NrankMax = 6, maxFR = 1000000, nt0max=81, NchanMax = 17, nsizes = 5;
+ 
+ 
+ //////////////////////////////////////////////////////////////////////////////////////////

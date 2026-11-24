@@ -1,0 +1,30 @@
+P2. Step 2 (template matching): matching-pursuit iterations per batch (Params(4), loop at CUDA/mexMPnu8.cu:959),
+mainLoop/learnTemplates.m:57 and mainLoop/trackAndSort.m:62 (v2.5 line numbers). Old 60, new 499 (pilot; 499 is the ceiling set by nmaxiter = 500).
+To change the value, edit the number after nInnerIter on the two + lines below (same value in both).
+
+diff --git a/mainLoop/learnTemplates.m b/mainLoop/learnTemplates.m
+index fe5251c..beeda45 100644
+--- a/mainLoop/learnTemplates.m
++++ b/mainLoop/learnTemplates.m
+@@ -54,7 +54,7 @@ niter   = numel(iorder);
+ % spike sorted time segment
+ t0 = ceil(rez.ops.trange(1) * ops.fs);
+ 
+-nInnerIter  = 60; % this is for SVD for the power iteration
++nInnerIter  = 499; % this is for SVD for the power iteration
+ 
+ % schedule of learning rates for the model fitting part
+ % starts small and goes high, it corresponds approximately to the number of spikes
+diff --git a/mainLoop/trackAndSort.m b/mainLoop/trackAndSort.m
+index 34c3553..9b3b2db 100644
+--- a/mainLoop/trackAndSort.m
++++ b/mainLoop/trackAndSort.m
+@@ -61,7 +61,7 @@ niter   = numel(iorder);
+ % spike sorted time segment
+ t0 = ceil(rez.ops.trange(1) * ops.fs);
+ 
+-nInnerIter  = 60; % this is for SVD for the power iteration
++nInnerIter  = 499; % this is for SVD for the power iteration
+ 
+ % schedule of learning rates for the model fitting part
+ % starts small and goes high, it corresponds approximately to the number of spikes

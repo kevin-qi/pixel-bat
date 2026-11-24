@@ -1,0 +1,144 @@
+P0. Upstream MouseLand/Kilosort v2.5 -> v2.5.2 (spike holes, issue 594; commits 10dce58, f2e570c), verbatim,
+without the hunk that sets rez.ops.useStableMode = 0 in mainLoop/trackAndSort.m:6.
+
+diff --git a/CUDA/mexMPnu8.cu b/CUDA/mexMPnu8.cu
+index 742a4fc..4be2c19 100644
+--- a/CUDA/mexMPnu8.cu
++++ b/CUDA/mexMPnu8.cu
+@@ -324,9 +324,11 @@ __global__ void  bestFilter(const double *Params, const float *data,
+               if  (Cf > Cnextbest + 1e-6)
+                     Cnextbest = Cf;
+       }
+-      err[tid0] 	= Cbest;
+-      eloss[tid0] 	= Cbest - Cnextbest;
+-      ftype[tid0] 	= ibest;
++      if (tid0>=nt0){
++          err[tid0] 	= Cbest;
++          eloss[tid0] 	= Cbest - Cnextbest;
++          ftype[tid0] 	= ibest;
++      }
+ 
+       tid0 += blockDim.x * gridDim.x;
+   }
+@@ -351,7 +353,7 @@ __global__ void  bestFilterUpdate(const double *Params, const float *data,
+   
+   if (ind<counter[0]){
+       t = st[ind]-nt0 + tid;
+-      if (t>=0 && t<NT){
++      if (t>=nt0 && t<NT){
+           Cbest = 0.0f;
+           for (i=0; i<Nfilt;i++){
+               a = 1+ lam;
+diff --git a/configFiles/configFile384.m b/configFiles/configFile384.m
+index a220a01..64b62f5 100644
+--- a/configFiles/configFile384.m
++++ b/configFiles/configFile384.m
+@@ -44,8 +44,9 @@ ops.nskip           = 25;  % how many batches to skip for determining spike PCs
+ ops.GPU                 = 1; % has to be 1, no CPU version yet, sorry
+ % ops.Nfilt               = 1024; % max number of clusters
+ ops.nfilt_factor        = 4; % max number of clusters per good channel (even temporary ones)
+-ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
+-ops.NT                  = 64*1024+ ops.ntbuff; % must be multiple of 32 + ntbuff. This is the batch size (try decreasing if out of memory). 
++ops.ntbuff              = 64;    % MUST BE MULTIPLE OF 32. Samples of symmetrical buffer for whitening and spike detection. Changing this could cause the spike holes problem  (issue #594).
++ops.NT                  = 64*1024 - ops.ntbuff; % MUST BE MULTIPLE OF 1024 - ntbuff. Changing this could cause the spike holes problem (issue #594). 
++
+ ops.whiteningRange      = 32; % number of channels to use for whitening each channel
+ ops.nSkipCov            = 25; % compute whitening matrix from every N-th batch
+ ops.scaleproc           = 200;   % int16 scaling of whitened data
+diff --git a/mainLoop/trackAndSort.m b/mainLoop/trackAndSort.m
+index 8a0b0b5..34c3553 100644
+--- a/mainLoop/trackAndSort.m
++++ b/mainLoop/trackAndSort.m
+@@ -48,7 +48,9 @@ sigmaMask  = ops.sigmaMask;
+ % spike threshold for finding missed spikes in residuals
+ ops.spkTh = -6; % why am I overwriting this here?
+ 
+-batchstart = 0:NT:NT*nBatches;
++% update to fix the spike holes problem, issue #594
++ntpad = rez.ops.ntbuff; 
++batchstart = ntpad:NT:NT*nBatches;
+ 
+ % find the closest NchanNear channels, and the masks for those channels
+ [iC, mask, C2C] = getClosestChannels(rez, sigmaMask, NchanNear);
+@@ -107,13 +109,33 @@ fWpc = zeros(NchanNear, Nrank, 1e7, 'single'); % NchanNear is the number of near
+ 
+ dWU1 = dWU;
+ 
+-for ibatch = 1:niter    
++for ibatch = 1:niter
+     k = iorder(ibatch); % k is the index of the batch in absolute terms
+-    
+-    % loading a single batch (same as everywhere)
+-    offset = 2 * ops.Nchan*batchstart(k);
++
++    % --------- fixed way to load batches, issue #594 ----------
++    % loading a single batch 
++    offset = 2 * ops.Nchan*(batchstart(k) - ntpad);
+     fseek(fid, offset, 'bof');
+-    dat = fread(fid, [ops.Nchan NT + ops.ntbuff], '*int16');
++    
++    % original batch sizes
++    %dat = fread(fid, [ops.Nchan NT + ops.ntbuff], '*int16');  
++
++    dat = fread(fid, [ops.Nchan NT+2*ntpad], '*int16');
++    if size(dat,2)<NT+2*ntpad
++        NT_current = size(dat,2);
++        ndiff = NT+2*ntpad - NT_current;
++        dat(:, NT_current+1:NT+2*ntpad) = repmat(dat(:, NT_current), 1, ndiff);
++    end
++    % -------------------------------------------------------------
++
++    % old broken way to load batches
++%     % loading a single batch (same as everywhere)
++%     offset = 2 * ops.Nchan*batchstart(k);
++%     fseek(fid, offset, 'bof');
++%     %dat = fread(fid, [ops.Nchan NT + ops.ntbuff], '*int16'); 
++%     % spike holes bug issue #594, location 1/2
++%     dat = fread(fid, [ops.Nchan NT], '*int16');
++
+     dat = dat';
+     dataRAW = single(gpuArray(dat))/ ops.scaleproc;
+     Params(1) = size(dataRAW,1);
+@@ -142,6 +164,22 @@ for ibatch = 1:niter
+     [st0, id0, x0, featW, dWU0, drez, nsp0, featPC, vexp, errmsg] = ...
+         mexMPnu8(Params, dataRAW, single(U), single(W), single(mu), iC-1, iW-1, UtU, iList-1, ...
+         wPCA);
++
++    
++    % fix for spike holes issue #594 ------------------------------------
++    
++    % exclude spike times in the padding
++    ix = (st0>ntpad) & (st0<=NT+ntpad);
++    %ix = [1:numel(st0)] > nmax;
++    
++    st0 = st0(ix);
++    id0 = id0(ix);
++    x0 = x0(ix);
++    featW = featW(:, ix);
++    featPC = featPC(:,:,ix);
++    vexp = vexp(ix); 
++
++    %--------------------------------------------------------------------
+     
+     % \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+     % \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+@@ -174,7 +212,18 @@ for ibatch = 1:niter
+     % of the raw data at this time
+     
+     % we carefully assign the correct absolute times to spikes found in this batch
+-    toff = nt0min + t0 + NT*(k-1);
++
++    % toff = nt0min + t0 + NT*(k-1);
++    % spike holes bug issue #594, location 2/2    
++%     ioffset         = ops.ntbuff;
++%     if k==1
++%         ioffset         = 0; % the first batch is special (no pre-buffer)
++%     end
++%     toff = nt0min + t0 -ioffset + (NT-ops.ntbuff)*(k-1);
++
++    % new spike holes fix #594, first batch now works fine
++    toff = t0 + nt0min -ntpad + batchstart(k);
++
+     st = toff + double(st0);
+     
+     irange = ntot + [1:numel(x0)]; % spikes and features go into these indices
