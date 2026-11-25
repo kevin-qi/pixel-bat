@@ -1,50 +1,66 @@
 # Sorting and curating Neuropixels recordings: lab quick start
 
-Two separate tools in this repository:
+Sort a list of recordings, prepare the sorts, curate them in a browser. Everything about one sort lives in its sort
+folder.
 
-- **Sorter** (`pixelbat/sorting/`): plain Python scripts, no GUI. Set the paths at the top of `sort_kilosort25.py` (the
-  main sorter: Kilosort 2.5 with the Moser lab's changes, run in MATLAB) or `sort_kilosort4.py` (Kilosort 4 from pip)
-  and run it. Both keep every unit apart and save the merges the sorter would have made as proposals.
-  `sort_batch.py` sorts a list of recordings from a CSV. Details: `pixelbat/sorting/README.md`.
-- **Curator** (`pixelbat/curation/`): a browser page for curating one sort at a time: all units on one page, merge
-  proposals decided by hand, labels in batches, a Phy-format folder as output. Command line: `pixelbat-curate
-  prepare | serve | export`. Spikes on positions are an optional plug-in (a positions file per session). Details:
-  `pixelbat/curation/README.md`.
+## The sort folder
 
-## Requirements
+One folder per recording and probe, by convention beside the Trodes export:
 
-- Linux or Windows with WSL2, an NVIDIA GPU with a current driver, and `uv` (https://docs.astral.sh/uv/:
-  `curl -LsSf https://astral.sh/uv/install.sh | sh`).
-- Kilosort 2.5: MATLAB with the Parallel Computing Toolbox and a C++ compiler MATLAB supports (Windows: Visual Studio
-  2022 Build Tools); Linux MATLAB or, from WSL2, Windows MATLAB.
-- Curator: about 1.5 GB of memory per open session; preparing a 2 h, 1,000-unit session peaks at about 45 GB with 32
-  processes (less with fewer).
-- Recordings exported by Trodes for Kilosort: an int16 binary (`*.group0.dat`) and its channel-coordinates file.
+    20260720_164544.rec/
+        20260720_164544_merged.kilosort/     Trodes export: the int16 binary and its channel coordinates
+        kilosort_outdir_probe1/              the sort folder: Kilosort's output (Phy files), never modified afterwards
+            curation/                        everything added to it
+                recording.json               the binary sorted, its gain (µV per bit) and spike sign; written by the sorter
+                cache/                       written by prepare
+                opened/                      written by prepare: what the app reads to open the sort in about a second
+                positions.npz                optional: spikes on positions
+                curation_log.jsonl           every decision made in the curator
+                phy/                         the curated sort, exported
 
-## Quick start
+The sort folder is what you give each step. It can be anywhere; moving it keeps its curation.
 
+## Install (Linux or WSL2, NVIDIA GPU)
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
     git clone <pixel-bat repository> && cd pixel-bat
-    uv sync --all-extras                      # Python environment in .venv, exactly as in uv.lock
+    uv sync                                    # the environment in .venv, exactly as in uv.lock
 
-Sort (Kilosort 2.5; compile once per machine first, see `pixelbat/sorting/kilosort25_moser/README.md`):
+Kilosort 2.5 also needs MATLAB and a one-time build: `pixelbat/sorting/kilosort25_moser/README.md`.
 
-    cp pixelbat/sorting/sort_kilosort25.py my_sort.py     # edit BINARY, COORDINATES, OUT, MATLAB, SCRATCH ...
+## 1. Sort
+
+    cp pixelbat/sorting/sort.py my_sort.py     # edit its config: the recordings list, the sorter, this machine
     .venv/bin/python my_sort.py
 
-Curate: one row per sort in a sessions CSV (`pixelbat/curation/sessions_example.csv`; for Kilosort 2.5 the `sort`
-column is `<OUT>/curation`), then
+The list is a CSV with one row per recording: `binary`, `coordinates`, `masked_channels`, `out` (the sort folder);
+`pixelbat/sorting/recordings_example.csv`. Kilosort 2.5 with the Moser lab's changes is the main sorter, Kilosort 4 the
+second. Gain is read from the `.rec` header and the spike sign is measured. Sorted recordings are skipped when the
+script is run again. Details: `pixelbat/sorting/README.md`.
 
-    .venv/bin/pixelbat-curate prepare sessions.csv NAME --jobs 8   # once per session
-    .venv/bin/pixelbat-curate serve sessions.csv --port 8780       # open http://localhost:8780, press ? for help
-    .venv/bin/pixelbat-curate export sessions.csv NAME             # or the Export button: <out>/phy
+## 2. Prepare
+
+    .venv/bin/pixelbat-curate prepare /data/bat1/*.rec/kilosort_outdir_probe1 --jobs 8
+
+Once per sort; prepared sorts are skipped. About 23 min and 45 GB with 32 processes for a 2 h, 1,000-unit recording;
+a few minutes with 8 for a 17 min one.
+
+## 3. Curate
+
+    .venv/bin/pixelbat-curate                  # one app per machine: http://localhost:8780
+
+The app starts on its picker: browse to a sort folder or choose one of the recent sorts (filter by words, order by any
+column), then curate; `?` lists the keys and every term. Decisions are saved as they are made.
+Export (the button, or `pixelbat-curate export SORT`) writes `curation/phy`, which loads like a Phy-curated folder.
+From another machine: `ssh -L 8780:localhost:8780 HOST`, then the same address. Details:
+`pixelbat/curation/README.md`.
 
 ## Not yet generic
 
-- Trodes only: the sorters read a Trodes coordinates file, and the shank of each site comes from a table of the Trodes
-  layouts we use (Neuropixels 1.0, 2.0 four-shank, UHD; `pixelbat/sorting/probe.py`). Another probe or acquisition
-  system needs a row there or its own probe reader.
-- The sign of the spikes (`SPIKES_POSITIVE`) and dead channels (`MASKED_CHANNELS`) are set by hand per recording; no
-  check is built in.
+- Trodes only: the sorters read a Trodes coordinates file and the `.rec` header, and the shank of each site comes from
+  a table of the Trodes layouts we use (Neuropixels 1.0, 2.0 four-shank, UHD; `pixelbat/sorting/probe.py`). A sort
+  made by other code is prepared with `pixelbat-curate prepare SORT --binary BINARY --gain-uv GAIN`.
+- Dead channels (`masked_channels`) are listed by hand per recording.
 - Kilosort 2.5 was built and run only with Windows MATLAB R2026a from WSL2 on an RTX 3090. Linux MATLAB is supported
   by the code (paths are passed as they are) but untested, as is compiling on Linux.
 - Kilosort 4 is pinned to 4.1.7: its final merge is patched by function name.
@@ -54,7 +70,7 @@ column is `<OUT>/curation`), then
 - The page calls paths "flight paths"; the only positions converter is our flight room's
   (`pixelbat/curation/positions/flight_room.py`). Other set-ups write the positions file themselves (format in the
   curator README).
-- `pixelbat/utils/trodes_export.py`, `session_paths.py` and the older notebooks default to our NAS layout; the new
-  scripts use only `export_rec_dir` from them, with the Trodes folder given explicitly.
+- `pixelbat/utils/trodes_export.py`, `session_paths.py` and the older notebooks default to our NAS layout; the sort
+  script uses only `export_rec_dir` from them, with the Trodes folder given explicitly.
 - `pixelbat/curation/checks/` are verification scripts written for our data; only `browser_test.py` is general (it
   needs `playwright` and a Chromium path set at its top).

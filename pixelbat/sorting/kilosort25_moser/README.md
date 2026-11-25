@@ -1,7 +1,7 @@
 # Kilosort 2.5 with the Moser patch set
 
 Kilosort 2.5 as Gardner et al. 2022 (Nature 602:123, "Toroidal topology of population activity in grid cells") ran it,
-with its step-3 merges left to the curator. Run it through `pixelbat/sorting/sort_kilosort25.py`.
+with its step-3 merges left to the curator. Run it through `pixelbat/sorting/sort.py`.
 
 ## Credit and licence
 
@@ -38,8 +38,8 @@ split. The text above each diff states file, line, old and new value.
 ## What a sort does
 
 `run_ks25_moser.m` sorts one recording (preprocessing, drift correction, template learning and matching) and writes the
-uncut, unmerged sort with every diagnostic into the output folder; it ends with `redo_step3.m`, which writes the folder
-to curate into `curation/`: every split made (also those stock Kilosort withholds for a correlogram dip), the stock
+uncut, unmerged sort with every diagnostic into the sort folder's `uncut/`; it ends with `redo_step3.m`, which writes the
+sort to curate into the sort folder: every split made (also those stock Kilosort withholds for a correlogram dip), the stock
 amplitude cutoff, no merge. The merges `find_merges` would make and the splits made despite a dip become merge
 proposals (`proposed_merges.json`, written by `kilosort25.py`). Settings are those of `run_ks25_moser.m` (`Th = [10 4]`,
 `lam = 10`, `AUCsplit = 0.9`, `minFR = 1/50`, `sigmaMask = 30`, `NT = 64*1024 - 64`, stable mode).
@@ -64,5 +64,5 @@ Linux MATLAB, in place:
 
     matlab -batch "cd('pixelbat/sorting/kilosort25_moser'); build_mex"
 
-It prints the GPU and CUDA version and `9 of 9 mex files built`. Then set `MATLAB_CODE` in `sort_kilosort25.py` to the
+It prints the GPU and CUDA version and `9 of 9 mex files built`. Then set `MATLAB_CODE` in your copy of `sort.py` to the
 folder compiled in.

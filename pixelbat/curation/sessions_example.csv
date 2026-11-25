@@ -1,3 +1,0 @@
-name,sort,recording,gain_uV,spikes_positive,out,positions
-bat1_260720,/results/bat1_260720_ks25/curation,/data/bat1/20260720_164544.rec/20260720_164544_merged.kilosort/20260720_164544_merged.group0.dat,0.18311105685598317,True,/results/curation/bat1_260720,/results/bat1_260720_ks25/positions.npz
-bat1_260721,/results/bat1_260721_ks4,/data/bat1/20260721_150210.rec/20260721_150210_merged.kilosort/20260721_150210_merged.group0.dat,0.18311105685598317,True,/results/curation/bat1_260721,

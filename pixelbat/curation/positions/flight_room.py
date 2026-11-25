@@ -1,8 +1,8 @@
-"""Positions file of one sort from a flight-room session: python -m pixelbat.curation.positions.flight_room SORT REC FLIGHT_PATHS OUT_NPZ.
+"""Positions file of one sort from a flight-room session, <SORT>/curation/positions.npz: python -m pixelbat.curation.positions.flight_room SORT REC FLIGHT_PATHS.
 
 REC is the Trodes .rec folder holding *_merged.kilosort/*_merged.timestamps.dat and *_merged.DIO/*_merged.dio_Controller_Din1.dat
 (the 3 s sync TTL); FLIGHT_PATHS is the .mat with flightPaths and cortexData.global_sample_ts_usec. Flight clusters 2 and up
-are the paths.
+are the paths. Tracking frames without a position are left out, of the paths and of the spikes.
 """
 import glob
 import os
@@ -49,13 +49,15 @@ def flight_spikes(spike_samples, rec, flight_paths_file):
     for cluster, start, end in flights:
         frame_cluster[start - 1:end] = cluster
     clusters = [int(c) for c in np.unique(frame_cluster) if c >= 2]
-    flight_xy = {cluster: trajectory[frame_cluster == cluster, :2] for cluster in clusters}
+    # A frame the tracking lost has no position
+    tracked = np.isfinite(trajectory[:, :2]).all(axis=1)
+    flight_xy = {cluster: trajectory[(frame_cluster == cluster) & tracked, :2] for cluster in clusters}
     # Spikes on clustered flights
     # Nearest tracking frame
     after = np.clip(np.searchsorted(frame_usec, spike_usec), 1, len(frame_usec) - 1)
     frame = np.where(spike_usec - frame_usec[after - 1] < frame_usec[after] - spike_usec, after - 1, after)
     in_session = (spike_usec >= frame_usec[0]) & (spike_usec <= frame_usec[-1])
-    on_flight = np.flatnonzero(in_session & (frame_cluster[frame] >= 2))
+    on_flight = np.flatnonzero(in_session & (frame_cluster[frame] >= 2) & tracked[frame])
     return flight_xy, on_flight, trajectory[frame[on_flight], :2], frame_cluster[frame[on_flight]]
 
 
@@ -66,7 +68,8 @@ def frame_rate_hz(flight_paths_file):
 
 
 if __name__ == '__main__':
-    sort, rec, flight_paths, out = sys.argv[1:5]
+    sort, rec, flight_paths = sys.argv[1:4]
+    out = os.path.join(sort, 'curation', 'positions.npz')
     spike_times = np.load(os.path.join(sort, 'spike_times.npy')).ravel()
     flight_xy, on_flight, spike_xy, spike_flight_cluster = flight_spikes(spike_times, rec, flight_paths)
     np.savez(out, spike_index=on_flight, spike_xy=spike_xy.astype(np.float32), spike_path=spike_flight_cluster,

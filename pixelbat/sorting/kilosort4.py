@@ -13,10 +13,7 @@ from pixelbat.sorting.probe import trodes_probe
 
 
 def sort_kilosort4(binary, coordinates, masked_channels, spikes_positive, settings, device, out):
-    """Kilosort 4 folder in out, plus proposed_merges.json and sort_unmerged.json; skipped when sort_unmerged.json exists."""
-    if os.path.exists(os.path.join(out, 'sort_unmerged.json')):
-        print(f'{out}: already sorted')
-        return
+    """Kilosort 4 folder in out, plus proposed_merges.json and sort_unmerged.json."""
     t0 = time.time()
     os.makedirs(out)
     propose_final_merges(out)

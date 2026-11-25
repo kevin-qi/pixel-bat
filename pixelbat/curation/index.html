@@ -11,7 +11,7 @@
   button:disabled { opacity: 0.4; cursor: default; }
   #top { min-height: 40px; display: flex; align-items: center; gap: 4px 6px; padding: 2px 10px; border-bottom: 1px solid var(--line);
          flex-wrap: wrap; box-sizing: border-box; }
-  #session { max-width: 165px; } #outcome { flex: 0 1 auto; white-space: nowrap; } #left { flex: 0 1 auto; white-space: nowrap; }
+  #session { max-width: 300px; } #outcome { flex: 0 1 auto; white-space: nowrap; } #left { flex: 0 1 auto; white-space: nowrap; }
   #outcome i { display: inline-block; width: 10px; height: 10px; margin: 0 3px 0 6px; vertical-align: -1px; }
   #left { border-left: 1px solid var(--line); padding-left: 10px; } #left a { color: inherit; cursor: pointer; text-decoration: underline dotted; }
   #top button, #top select, #top label { flex: 0 0 auto; }
@@ -49,6 +49,23 @@
   #help { position: fixed; inset: 5% 14%; background: var(--bg); border: 1px solid var(--line); padding: 14px 28px; overflow: auto;
           box-shadow: 0 4px 30px #0007; display: none; line-height: 1.6; font-size: 15px; z-index: 5; }
   #help h3 { margin: 4px 0 8px; }
+  #opener { position: fixed; inset: 6% 16%; background: var(--bg); border: 1px solid var(--line); padding: 14px 28px; overflow: auto;
+            box-shadow: 0 4px 30px #0007; display: none; font-size: 15px; z-index: 6; }
+  #opener h3 { margin: 14px 0 6px; } #opener .line { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
+  #opener input { font: inherit; height: 22px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+  #path { flex: 1 1 auto; font-family: monospace; } #folderNote { margin: 6px 0; } #folderNote code { user-select: all; background: var(--key); padding: 2px 6px; border-radius: 3px; }
+  #opener .entry { display: flex; gap: 12px; padding: 3px 6px; cursor: pointer; border-radius: 3px; } #opener .entry:hover { background: var(--key); }
+  #opener .entry span:first-child { flex: 1 1 auto; font-family: monospace; overflow-wrap: anywhere; } #opener .entry .dim { opacity: 0.6; white-space: nowrap; }
+  #opener .entry b { font-weight: 600; white-space: nowrap; } #folders { max-height: 26vh; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+  #known { border-collapse: collapse; width: 100%; } #known th { text-align: left; padding: 3px 12px 3px 6px; cursor: pointer; white-space: nowrap; border-bottom: 1px solid var(--line); user-select: none; }
+  #known td { padding: 3px 12px 3px 6px; white-space: nowrap; } #known td:first-child { font-family: monospace; white-space: normal; overflow-wrap: anywhere; width: 100%; }
+  #known tbody tr { cursor: pointer; } #known tbody tr:hover { background: var(--key); } #known .dim { opacity: 0.6; } #known tr.current td:first-child { font-weight: 600; } #under { opacity: 0.6; font-family: monospace; margin: 4px 6px; }
+  #loading { position: fixed; left: 50%; top: 30%; transform: translateX(-50%); width: min(620px, 80vw); background: var(--bg); border: 1px solid var(--line);
+             padding: 14px 28px 20px; box-shadow: 0 4px 30px #0007; display: none; font-size: 15px; z-index: 7; }
+  #loading h3 { margin: 4px 0 12px; overflow-wrap: anywhere; } #loading .step { margin: 7px 0 3px; opacity: 0.55; } #loading .step.now { opacity: 1; font-weight: 600; }
+  #loading .step.done { opacity: 1; } #loading .step.done::before { content: '✓ '; color: #2b8a3e; } #loading .step.bad { opacity: 1; color: #c92a2a; font-weight: 600; }
+  #loading .meter { height: 6px; background: var(--key); border-radius: 3px; overflow: hidden; } #loading .meter i { display: block; height: 100%; width: 0; background: #1c7ed6; }
+  #loadingFailed { display: none; margin-top: 14px; }
   #help .keys { columns: 2; column-gap: 32px; font-size: 14px; line-height: 1.35; }
   #help table { border-collapse: collapse; margin-bottom: 10px; width: 100%; }
   #help th { text-align: left; padding: 2px 0 4px; } #help tr { break-inside: avoid; }
@@ -59,7 +76,7 @@
   kbd { border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; background: var(--key); font: 13px monospace; }
 </style></head><body>
 <div id="top">
-  <select id="session"></select>
+  <select id="session" title="Sorts opened on this machine"></select><button id="open" title="Open a sort folder">Open…</button>
   <input id="goto" type="text" placeholder="unit… /" size="5" title="Type a unit number and press Enter; Shift+Enter adds it to the selection">
   <span id="outcome"></span><span id="left"></span>
   <label style="margin-right: auto" title="Show only what was still to decide when ticked; what you decide afterwards stays in view until you tick it again (h)"><input type="checkbox" id="remaining"> TODO only</label>
@@ -84,6 +101,25 @@
     <div id="compareBox"><div id="sections"></div></div>
     <div id="status"></div>
   </div></div>
+<div id="loading">
+  <h3>Opening <span id="loadingName"></span></h3>
+  <div id="stepApp" class="step"></div>
+  <div id="stepArrays" class="step"></div><div class="meter"><i id="arraysBar"></i></div>
+  <div id="stepTable" class="step"></div>
+  <div id="stepDraw" class="step"></div>
+  <div id="loadingFailed"><button id="another">Open another sort…</button></div>
+</div>
+<div id="opener">
+  <h3>Open a sort: a Kilosort output folder</h3>
+  <div class="line"><input id="path" type="text" spellcheck="false" placeholder="/path/to/kilosort_outdir_probe1"><button id="go">Open</button><button id="closeOpener">Close</button></div>
+  <div id="folderNote"></div>
+  <div id="folders"></div>
+  <h3>Recent sorts on this machine</h3>
+  <div class="line"><input id="filter" type="text" spellcheck="false" placeholder="filter: any words of the path" style="flex: 1 1 auto"></div>
+  <div id="under" class="dim"></div>
+  <table id="known"><thead><tr><th data-by="sort">sort</th><th data-by="opened">opened</th><th data-by="decided">last decision</th><th data-by="decisions">decisions</th><th></th></tr></thead><tbody></tbody></table>
+  <div class="line" style="margin-top: 16px">Curator <input id="user" type="text" size="14" spellcheck="false" title="Saved with every decision you make"></div>
+</div>
 <div id="help">
   <h3>Keys</h3>
   <div class="keys">
@@ -126,6 +162,8 @@
   </div>
   <h3>Words, in panel order</h3>
   <dl>
+    <dt>sort</dt><dd>a Kilosort output folder. Open… takes any folder: a prepared sort opens, another folder is listed. Everything of
+      a sort's curation is in its <code>curation</code> folder: the prepared cache, your decisions (saved as you make them) and the export.</dd>
     <dt>chips and shading</dt><dd>dashed chip: Bombcell's proposal; filled ✓ chip: your label, which also shades the unit's
       text and puts a bar in its colour at its left. Selected: blue outline and blue bar at the right. Five squares: Bombcell's
       label on 5 draws of 500 spikes (the outlined first one is the proposal).</dd>
@@ -138,7 +176,7 @@
       (of the least similar pair). <i>Bombcell</i>: its label for the merged unit. <i>this tool</i>: merge (duplicate spikes,
       or every pair passes the refractory test), keep apart (a pair fails, or the merged unit would be over 20% foreign),
       or untestable (under 3 spikes expected within 1 ms, or a dip that is not significant). <i>you</i>: your decision;
-      an undecided group is exported split. Groups under 500 spikes in all are merged by this tool when the session opens.</dd>
+      an undecided group is exported split. Groups under 500 spikes in all are not listed.</dd>
     <dt>cross-correlogram</dt><dd>spike pairs at each lag as a multiple of chance (1× = independent units), on a log axis
       shared by the group's pairs. Kilosort 4's refractory test is drawn in it: the 1 ms bins it counts (blue, with their
       level) must lie under the pass line (red dashed: its limit times the flank level, black). The verdict is in the corner;
@@ -236,8 +274,13 @@ const remember = (key, value) => localStorage.setItem('curation.' + key, value);
 const recall = key => localStorage.getItem('curation.' + key);
 
 // Data: every array is loaded once per session, one row per original unit
-async function loadArrays(name) {
-  const buffer = await fetch(`/arrays/${name}`).then(r => r.arrayBuffer());
+// `progress(bytes, total)` is called as they arrive; null when the app cannot open the sort
+async function loadArrays(name, progress) {
+  const response = await fetch(`/arrays?sort=${encodeURIComponent(name)}`);
+  if (!response.ok) return null;
+  const total = +response.headers.get('X-Arrays-Bytes'), bytes = new Uint8Array(total), reader = response.body.getReader();
+  for (let got = 0, part = await reader.read(); !part.done; part = await reader.read()) { bytes.set(part.value, got); got += part.value.length; progress(got, total); }
+  const buffer = bytes.buffer;
   const headerLength = new DataView(buffer).getUint32(0, true);
   const header = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 4, headerLength)));
   const types = {float32: Float32Array, int32: Int32Array, uint8: Uint8Array, uint32: Uint32Array};
@@ -256,16 +299,110 @@ async function loadArrays(name) {
   }
   return arrays;
 }
+// A sort is named by the end of its folder's path
+const shortName = sort => sort.split('/').slice(-3).join('/');
+// Sorts opened on this machine: the dropdown lists the prepared ones, the dialog all of them
+async function loadSorts() {
+  const answer = await getJSON('/sorts');
+  S.home = answer.home; S.user = recall('user') || answer.user;
+  document.getElementById('user').value = S.user;
+  S.known = answer.sorts;
+  // The dropdown: the prepared sorts, the one opened last first
+  const recent = answer.sorts.filter(s => s.prepared).sort((a, b) => (b.opened || '').localeCompare(a.opened || '') || a.sort.localeCompare(b.sort));
+  document.getElementById('session').replaceChildren(...recent.map(s => new Option(shortName(s.sort), s.sort)));
+  document.getElementById('session').value = S.name || '';
+  drawKnown();
+}
+// The dialog's list of sorts: those whose path has every word of the filter, ordered by the column clicked (again: reversed)
+function drawKnown() {
+  const words = document.getElementById('filter').value.toLowerCase().split(/\s+/).filter(w => w), [by, down] = S.knownOrder;
+  const shown = S.known.filter(s => words.every(w => s.sort.toLowerCase().includes(w)));
+  const value = s => by === 'decisions' ? s.decisions : s[by] || '';
+  shown.sort((a, b) => (typeof value(a) === 'number' ? value(a) - value(b) : value(a).localeCompare(value(b))) * (down ? -1 : 1) || a.sort.localeCompare(b.sort));
+  for (const th of document.querySelectorAll('#known th[data-by]')) th.textContent = th.dataset.by.replace('decided', 'last decision') + (th.dataset.by === by ? (down ? ' ▼' : ' ▲') : '');
+  const when = time => time ? time.replace('T', ' ').slice(0, 16) : '';
+  // Paths are written from the folder they all share, named once above the list
+  const folders = shown.map(s => s.sort.split('/').slice(0, -1));
+  let shared = 0;
+  while (folders.length && folders[0][shared] !== undefined && folders.every(f => f[shared] === folders[0][shared])) shared++;
+  document.getElementById('under').textContent = shared > 1 ? `in ${folders[0].slice(0, shared).join('/')}/` : '';
+  document.querySelector('#known tbody').replaceChildren(...shown.map(s => {
+    const row = document.createElement('tr'), cells = [shared > 1 ? s.sort.split('/').slice(shared).join('/') : s.sort, when(s.opened), when(s.decided), s.prepared ? s.decisions : 'not prepared', '✕'].map(text => Object.assign(document.createElement('td'), {textContent: text}));
+    if (s.sort === S.name) row.className = 'current';
+    if (!s.prepared) row.classList.add('dim');
+    cells[4].title = 'Take off this list (the folder is not touched)'; cells[4].className = 'dim';
+    cells[4].addEventListener('click', async e => { e.stopPropagation(); await fetch('/forget', {method: 'POST', body: JSON.stringify({sort: s.sort})}); loadSorts(); });
+    row.addEventListener('click', () => showFolder(s.sort));
+    row.append(...cells);
+    return row;
+  }));
+}
+// One folder in the dialog: a prepared sort opens; any other folder is listed, a sort not yet prepared with the command that prepares it
+async function showFolder(path) {
+  const opener = document.getElementById('opener'), note = document.getElementById('folderNote');
+  const response = await fetch(`/folder?path=${encodeURIComponent(path)}`), folder = await response.json();
+  if (response.ok && folder.prepared) {
+    opener.style.display = 'none';
+    history.replaceState(null, '', `?sort=${encodeURIComponent(folder.path)}`);
+    document.title = shortName(folder.path);
+    return enqueue(async () => { await openSession(folder.path); await loadSorts(); });
+  }
+  opener.style.display = 'block';
+  // A folder that is not there: the home folder is listed instead
+  if (!response.ok) { await showFolder(S.home); note.textContent = `No such folder: ${path}`; return; }
+  document.getElementById('path').value = folder.path;
+  note.replaceChildren(...(folder.sort ? ['This sort is not prepared for curation yet. In a terminal: ', Object.assign(document.createElement('code'), {textContent: `pixelbat-curate prepare '${folder.path}'`})] : []));
+  const entries = [{name: '..', path: folder.parent, note: ''}, ...folder.folders.map(f => ({name: f.name, path: `${folder.path}/${f.name}`, note: f.prepared ? 'prepared sort' : f.sort ? 'sort, not prepared' : '', prepared: f.prepared}))];
+  document.getElementById('folders').replaceChildren(...entries.map(f => {
+    const entry = document.createElement('div'), name = document.createElement('span'), tag = document.createElement(f.prepared ? 'b' : 'span');
+    entry.className = 'entry'; name.textContent = f.name; tag.textContent = f.note; tag.classList.add('dim');
+    if (f.prepared) tag.classList.remove('dim');
+    entry.addEventListener('click', () => showFolder(f.path));
+    entry.append(name, tag);
+    return entry;
+  }));
+}
+// One line of the loading card: waiting (dim), now (bold), done (ticked) or bad (red)
+function step(id, text, state) { const e = document.getElementById(id); e.textContent = text; e.className = 'step ' + state; }
 async function openSession(name) {
-  status('loading session…', false, true);
+  const t0 = performance.now(), seconds = () => `${((performance.now() - t0) / 1000).toFixed(1)} s`, asked = `sort=${encodeURIComponent(name)}`;
+  document.getElementById('loadingName').textContent = shortName(name);
+  document.getElementById('loadingFailed').style.display = 'none'; document.getElementById('arraysBar').style.width = '0';
+  step('stepApp', 'app: opening the sort', 'now'); step('stepArrays', 'unit data: waiting for the app', ''); step('stepTable', 'unit table: waiting for the app', ''); step('stepDraw', 'drawing', '');
+  document.getElementById('loading').style.display = 'block';
+  // What the app says it is doing, while it has not answered
+  let appStage = 'opening the sort', appDone = false;
+  const watching = setInterval(() => {
+    getJSON(`/progress?${asked}`).then(p => { appStage = p.stage || appStage; });
+    if (!appDone) step('stepApp', `app: ${appStage} · ${seconds()}`, 'now');
+    else if (!S.tableDone) step('stepTable', `unit table: computing · ${seconds()}`, 'now');
+  }, 250);
+  S.tableDone = false;
   S.loading = true; S.sel = []; S.chosen = new Set(); S.ref = []; S.units = [];
   S.firstPairs = null; S.done = null;
   for (const cache of [S.trains, S.pairs, S.ks, S.paths, S.mapBoxes, S.traces, S.traceAsks, S.ratemaps, S.amps, S.sortedAmps, S.partners, S.footprints, S.footprintAsks, S.waveforms, S.shared]) cache.clear();
   document.getElementById('session').value = name;
   S.name = name;
   // Merged units' waveforms are asked as soon as the table names them, while the arrays load
-  const table = getJSON(`/table/${name}`), [meta, arrays] = await Promise.all([getJSON(`/session/${name}`), loadArrays(name),
-    table.then(t => loadWaveforms(t.units.filter(u => u.members.length > 1).map(u => u.unit)))]);
+  const megabytes = bytes => (bytes / 1e6).toFixed(0);
+  const table = getJSON(`/table?${asked}`).then(t => { S.tableDone = true; if (!t.error) step('stepTable', `unit table: ${t.units.length} units · ${seconds()}`, 'done'); return t; });
+  const session = getJSON(`/session?${asked}`).then(m => { appDone = true; if (!m.error) step('stepApp', `app: sort open · ${seconds()}`, 'done'); return m; });
+  const loading = loadArrays(name, (got, total) => {
+    document.getElementById('arraysBar').style.width = `${100 * got / total}%`;
+    step('stepArrays', `unit data: ${megabytes(got)} of ${megabytes(total)} MB`, got < total ? 'now' : 'done');
+  });
+  const [meta, arrays, first] = await Promise.all([session, loading, table]);
+  // A sort the app cannot open: its error stays on the card, with a way out
+  if (meta.error || first.error) {
+    clearInterval(watching);
+    step('stepApp', `the app could not open this sort: ${meta.error || first.error}`, 'bad');
+    document.getElementById('loadingFailed').style.display = 'block';
+    return;
+  }
+  await loadWaveforms(first.units.filter(u => u.members.length > 1).map(u => u.unit));
+  clearInterval(watching);
+  step('stepDraw', 'drawing', 'now');
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   S.meta = meta; S.A = arrays;
   S.rowOf = new Map(meta.ids.map((id, row) => [id, row]));
   S.flightClusters = Object.keys(meta.paths);
@@ -276,8 +413,9 @@ async function openSession(name) {
   S.duration = meta.n_samples / meta.rate_hz;
   S.focusUnit = recall('focus.' + name) === null ? null : +recall('focus.' + name);
   S.loading = false;
-  await applyTable(await table);
-  status('');
+  await applyTable(first);
+  document.getElementById('loading').style.display = 'none';
+  status(`opened in ${seconds()}`);
   // The session opens on the first item still to decide
   S.panelItem = null; scrollToFocus(); undecidedAfter(-1); narrow();
 }
@@ -325,7 +463,7 @@ async function applyTable(table, touched) {
 async function act(event) {
   status('saving…');
   S.decided = performance.now();
-  const response = await fetch('/', {method: 'POST', body: JSON.stringify({...event, session: S.name, version: S.version})});
+  const response = await fetch('/', {method: 'POST', body: JSON.stringify({...event, sort: S.name, user: S.user, version: S.version})});
   const answer = await response.json();
   if (answer.table || response.ok) await applyTable(answer.table || answer, response.ok && ['label', 'flag', 'keep', 'undo'].includes(event.kind) ? answer.touched : undefined);
   status(response.ok ? answer.done : answer.error, !response.ok);
@@ -338,13 +476,13 @@ function show(ids) { const here = ids.filter(id => S.byId.has(id)); S.panelItem 
 // Kilosort amplitude of every spike of original units, in the order of their spike trains; loaded once per unit
 async function loadAmplitudes(ids) {
   const missing = ids.filter(id => !S.amps.has(id)), name = S.name;
-  await Promise.all(missing.map(async id => { const buffer = await fetch(`/amplitudes/${name}?unit=${id}`).then(r => r.arrayBuffer()); if (name === S.name) S.amps.set(id, new Float32Array(buffer)); }));
+  await Promise.all(missing.map(async id => { const buffer = await fetch(`/amplitudes?sort=${encodeURIComponent(name)}&unit=${id}`).then(r => r.arrayBuffer()); if (name === S.name) S.amps.set(id, new Float32Array(buffer)); }));
 }
 // Mean waveform of merged units, once per unit (a merged unit's number is never reused)
 async function loadWaveforms(ids) {
   const missing = ids.filter(id => !S.waveforms.has(id)), name = S.name;
   if (!missing.length) return;
-  const answer = await getJSON(`/waveforms/${name}?units=${missing.join(',')}`);
+  const answer = await getJSON(`/waveforms?sort=${encodeURIComponent(name)}&units=${missing.join(',')}`);
   if (name === S.name) for (const id of missing) S.waveforms.set(id, answer[id]);
 }
 function originalTrains(u) {
@@ -809,7 +947,7 @@ function drawDensity(ctx, units, colors, x, y, w, h, options = {}) {
 function loadTraces(rows) {
   const missing = rows.filter(row => !S.traceAsks.has(row)), name = S.name, [ns, nt, nc] = S.meta.traces_shape;
   if (missing.length) {
-    const asked = fetch(`/traces/${name}?rows=${missing.join(',')}`).then(r => r.arrayBuffer()).then(buffer => {
+    const asked = fetch(`/traces?sort=${encodeURIComponent(name)}&rows=${missing.join(',')}`).then(r => r.arrayBuffer()).then(buffer => {
       if (name === S.name) missing.forEach((row, k) => S.traces.set(row, new Int16Array(buffer, k * ns * nt * nc * 2, ns * nt * nc)));
     });
     for (const row of missing) S.traceAsks.set(row, asked);
@@ -819,7 +957,7 @@ function loadTraces(rows) {
 // Footprints of units, from the server once per set of units and version
 function loadFootprints(ids) {
   const footprintKey = `${ids.join(',')}|${S.version}`, name = S.name;
-  if (!S.footprintAsks.has(footprintKey)) S.footprintAsks.set(footprintKey, getJSON(`/footprints/${name}?units=${ids.join(',')}`).then(answer => { if (name === S.name) S.footprints.set(footprintKey, answer); }));
+  if (!S.footprintAsks.has(footprintKey)) S.footprintAsks.set(footprintKey, getJSON(`/footprints?sort=${encodeURIComponent(name)}&units=${ids.join(',')}`).then(answer => { if (name === S.name) S.footprints.set(footprintKey, answer); }));
   return S.footprintAsks.get(footprintKey);
 }
 // Single spikes of each unit (every fifth of its 500, so 100) as thin traces on all its sites, with the mean on top;
@@ -1514,7 +1652,7 @@ function drawPanel(only) {
   if (n === 1 && partners === undefined) {
     const id = units[0].unit, name = S.name;
     S.partners.set(id, null);
-    getJSON(`/partners/${name}?unit=${id}`).then(answer => { if (name === S.name && S.byId.has(id)) { S.partners.set(id, answer.filter(p => p.qualifies).slice(0, 3)); if (S.panelKey === key) drawPanel(['head']); } });
+    getJSON(`/partners?sort=${encodeURIComponent(name)}&unit=${id}`).then(answer => { if (name === S.name && S.byId.has(id)) { S.partners.set(id, answer.filter(p => p.qualifies).slice(0, 3)); if (S.panelKey === key) drawPanel(['head']); } });
   }
   const partnerWords = (partners || []).map(p => [`${p.unit}`, p.notch !== null && p.notch <= 0.5 ? '(rarely within 1 ms of it)' : '(takes turns with it)']);
   const tests = n === 1 ? units[0].failed.filter(t => !['refractory_good', 'presence_ratio', 'num_spikes'].includes(t)).map(t => TESTS[t]) : [];
@@ -1882,7 +2020,7 @@ function drawPanel(only) {
       const asked = `${name}|${missing.map(mapKey).join(';')}`;
       if (missing.length && S.ratemapsAsked !== asked) {
         S.ratemapsAsked = asked;
-        getJSON(`/ratemaps/${name}?units=${missing.map(u => u.unit).join(',')}`).then(answer => {
+        getJSON(`/ratemaps?sort=${encodeURIComponent(name)}&units=${missing.map(u => u.unit).join(',')}`).then(answer => {
           if (name !== S.name) return;
           S.rateGrid = {shape: answer.shape, extent: answer.extent};
           for (const u of missing) S.ratemaps.set(mapKey(u), answer.maps[u.unit]);
@@ -1950,7 +2088,7 @@ function drawPanel(only) {
   if (merged && merged.rp_label === undefined && !S.ks.has(chosen.map(u => u.members).join('|'))) {
     const members = chosen.map(u => u.members).join('|');
     S.ks.set(members, {});
-    getJSON(`/merged/${S.name}?units=${S.sel.join(',')}`).then(ks => {
+    getJSON(`/merged?sort=${encodeURIComponent(S.name)}&units=${S.sel.join(',')}`).then(ks => {
       // An answer for units a decision has changed meanwhile is dropped
       if (!ks.pairs) return S.ks.delete(members);
       S.ks.set(members, ks); if (S.panelKey === key) drawPanel(['evidence', 'foreign', 'table']);
@@ -1976,7 +2114,7 @@ function loadShared(units) {
   const ids = units.map(u => u.unit).join(','), sharedKey = `${ids}|${S.version}`, name = S.name;
   if (!S.shared.has(sharedKey)) {
     const answer = {traces: null, answered: false};
-    answer.asked = getJSON(`/shared/${name}?units=${ids}`).then(got => {
+    answer.asked = getJSON(`/shared?sort=${encodeURIComponent(name)}&units=${ids}`).then(got => {
       answer.answered = true;
       // A decision made meanwhile changes the units; that answer is dropped
       if (name !== S.name || !got.waveforms) return;
@@ -2060,7 +2198,7 @@ async function key(k, sel) {
   }
   if (k === 'p') {
     if (sel.length !== 1) return status('partners: select one unit');
-    const name = S.name, partners = await getJSON(`/partners/${name}?unit=${sel[0]}`);
+    const name = S.name, partners = await getJSON(`/partners?sort=${encodeURIComponent(name)}&unit=${sel[0]}`);
     if (name !== S.name) return;
     const next = partners.find(p => !S.ref.includes(p.unit));
     if (!next) return status('no more partners within 100 µm');
@@ -2139,7 +2277,7 @@ async function acceptScreen(section) {
 function enqueue(run) {
   S.queue = S.queue.then(run).catch(async error => {
     status(`ERROR: ${error.message || error} — reloading the session state`, true);
-    await applyTable(await getJSON(`/table/${S.name}`));
+    await applyTable(await getJSON(`/table?sort=${encodeURIComponent(S.name)}`));
   });
 }
 const press = k => { if (!S.loading) { status(''); enqueue(() => key(k, [...S.sel])); } };
@@ -2194,7 +2332,7 @@ sectionsBox.addEventListener('click', e => {
   S.floorDraft = {unit: plot.unit, floor};
   drawPanel(['floor']);
   // A failed preview is reported, never stored
-  fetch(`/floor/${name}?unit=${plot.unit}&floor=${floor}`).then(async r => { const preview = await r.json(); if (!r.ok) throw new Error(preview.error); return preview; }).then(preview => {
+  fetch(`/floor?sort=${encodeURIComponent(name)}&unit=${plot.unit}&floor=${floor}`).then(async r => { const preview = await r.json(); if (!r.ok) throw new Error(preview.error); return preview; }).then(preview => {
     if (S.floorDraft && S.floorDraft.unit === plot.unit && S.floorDraft.floor === floor) { S.floorDraft.preview = preview; drawPanel(['floor']); }
   });
 });
@@ -2235,7 +2373,13 @@ list.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const help = document.getElementById('help'), box = document.getElementById('goto');
+  const help = document.getElementById('help'), box = document.getElementById('goto'), opener = document.getElementById('opener');
+  // The open dialog takes the keys: Enter opens the typed folder, Esc closes it
+  if (opener.style.display === 'block') {
+    if (e.key === 'Enter' && e.target.id === 'path') showFolder(e.target.value.trim());
+    if (e.key === 'Escape') opener.style.display = 'none';
+    return;
+  }
   // Help: Esc or ? closes it, the paging keys scroll it, other keys do nothing
   if (help.style.display === 'block') {
     e.preventDefault();
@@ -2299,13 +2443,20 @@ document.getElementById('export').addEventListener('click', e => {
   if (undecided && S.exportAsked !== S.version) { S.exportAsked = S.version; return status(`${undecided} units have no label and will be exported without one — click Export again to go ahead`, false, true); }
   enqueue(async () => {
     status('exporting…', false, true);
-    const response = await fetch('/export', {method: 'POST', body: JSON.stringify({session: S.name})}), answer = await response.json();
+    const response = await fetch('/export', {method: 'POST', body: JSON.stringify({sort: S.name})}), answer = await response.json();
     status((response.ok ? `exported to ${answer.folder} — ` : 'EXPORT FAILED: ') + answer.message, !response.ok);
   });
 });
 document.getElementById('helpButton').addEventListener('click', e => { e.stopPropagation(); e.target.blur(); press('?'); });
 document.getElementById('depth').addEventListener('change', e => { e.target.blur(); remember('depth', e.target.checked ? '1' : ''); enqueue(() => { buildLines(); assignColors(); drawAll(); scrollToFocus(); }); });
-document.getElementById('session').addEventListener('change', e => { e.target.blur(); enqueue(() => openSession(e.target.value)); });
+document.getElementById('session').addEventListener('change', e => { e.target.blur(); showFolder(e.target.value); });
+document.getElementById('open').addEventListener('click', e => { e.target.blur(); loadSorts(); showFolder(S.name ? S.name.split('/').slice(0, -1).join('/') : S.home); });
+document.getElementById('go').addEventListener('click', () => showFolder(document.getElementById('path').value.trim()));
+document.getElementById('filter').addEventListener('input', drawKnown);
+document.querySelector('#known thead').addEventListener('click', e => { const by = e.target.dataset.by; if (by) { S.knownOrder = [by, S.knownOrder[0] === by ? !S.knownOrder[1] : by !== 'sort']; drawKnown(); } });
+document.getElementById('another').addEventListener('click', () => { document.getElementById('loading').style.display = 'none'; loadSorts(); showFolder(S.home); });
+document.getElementById('closeOpener').addEventListener('click', () => { document.getElementById('opener').style.display = 'none'; });
+document.getElementById('user').addEventListener('change', e => { S.user = e.target.value.trim(); remember('user', S.user); });
 function redrawAll() { if (!S.loading) { S.paths.clear(); buildLines(); assignColors(); drawAll(); } }
 // The panel's buttons lose their key letters (kept in each title) when with them the buttons take more than one line
 function narrow() {
@@ -2334,8 +2485,7 @@ zoom.value = recall('zoom') || (innerWidth >= 2400 ? '1.15' : '1');
 document.body.style.zoom = zoom.value;
 narrow();
 zoom.addEventListener('change', e => { e.target.blur(); remember('zoom', zoom.value); document.body.style.zoom = zoom.value; narrow(); redrawAll(); });
-getJSON('/sessions').then(names => {
-  document.getElementById('session').innerHTML = names.map(n => `<option>${n}</option>`).join('');
-  enqueue(() => openSession(names[0]));
-});
+// The sort in the address, else the dialog: the home folder and the recent sorts
+S.knownOrder = ['opened', true];
+loadSorts().then(() => showFolder(new URLSearchParams(location.search).get('sort') || S.home));
 </script></body></html>

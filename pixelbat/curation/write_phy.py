@@ -1,7 +1,8 @@
-"""Curated sort of one session as a Phy-format folder: pixelbat-curate export SESSIONS_CSV NAME.
+"""Curated sort of one sort folder as a Phy-format folder: pixelbat-curate export SORT.
 
-Applies the logged merges and labels to the Kilosort output and writes <out>/phy: spike arrays, cluster_group.tsv,
-cluster_info.tsv and the small files Phy needs. A merged unit loses duplicate spikes by Kilosort's own rule.
+Applies the logged merges and labels to the Kilosort output and writes <SORT>/curation/phy: spike arrays, cluster_group.tsv,
+cluster_info.tsv, cluster_members.tsv and the small files Phy needs. A merged unit loses duplicate spikes by Kilosort's
+own rule. From Python: export(sort, log, out) writes the same folder to out.
 """
 import json
 import os
@@ -28,9 +29,9 @@ def cluster_table(spike_times, spike_clusters, spike_templates, templates, unwhi
     return pd.DataFrame(rows).set_index('cluster_id')
 
 
-if __name__ == '__main__':
-    session = pd.read_csv(sys.argv[1], dtype=str).set_index('name').loc[sys.argv[2]]
-    sort, out = session['sort'], os.path.join(session['out'], 'phy')
+def export(sort, log, out):
+    """Writes the curated Phy folder out from a sort folder and its decision log; returns the summary line."""
+    details = json.load(open(os.path.join(sort, 'curation', 'recording.json')))
     os.makedirs(out, exist_ok=True)
     params = {}
     exec(open(os.path.join(sort, 'params.py')).read(), params)
@@ -44,12 +45,14 @@ if __name__ == '__main__':
                           for column in ['Amplitude', 'ContamPct', 'KSLabel']], axis=1)
 
     ## Decisions
-    logged = read_log(os.path.join(session['out'], 'curation_log.jsonl'))
+    logged = read_log(log)
     members, labels, _, _, floors = current_state(kilosort.index, not_undone(logged))
     window = duplicate_window(sort)
 
     ## Amplitude floors: the spikes of a unit below its floor become a unit of their own, labelled noise
+    original = {}
     for unit, (floor, below_id) in floors.items():
+        original[below_id] = unit
         below = (spike_clusters == unit) & (amplitudes < floor)
         spike_clusters = np.where(below, below_id, spike_clusters)
         for cluster in (unit, below_id):
@@ -74,7 +77,7 @@ if __name__ == '__main__':
     kilosort = kilosort.loc[sorted(members)]
 
     ## Phy tables
-    n_samples = os.path.getsize(session['recording']) // (params['n_channels_dat'] * np.dtype(params['dtype']).itemsize)
+    n_samples = os.path.getsize(details['binary']) // (params['n_channels_dat'] * np.dtype(params['dtype']).itemsize)
     info = cluster_table(spike_times[keep], curated[keep], spike_templates[keep], np.load(os.path.join(sort, 'templates.npy')),
                          np.load(os.path.join(sort, 'whitening_mat_inv.npy')), np.load(os.path.join(sort, 'channel_map.npy')).ravel(),
                          np.load(os.path.join(sort, 'channel_positions.npy')),
@@ -90,6 +93,10 @@ if __name__ == '__main__':
     info['group'].dropna().to_csv(os.path.join(out, 'cluster_group.tsv'), sep='\t')
     for column in ['Amplitude', 'ContamPct', 'KSLabel']:
         info[column].to_csv(os.path.join(out, f'cluster_{column}.tsv'), sep='\t')
+
+    ## Original Kilosort clusters of every exported unit
+    pd.DataFrame([{'cluster_id': cluster, 'original_cluster_id': original.get(part, part)} for cluster in info.index for part in members[cluster]]
+                 ).to_csv(os.path.join(out, 'cluster_members.tsv'), sep='\t', index=False)
 
     ## Continuous quality numbers of every exported unit, for stricter selection downstream
     quality = []
@@ -107,12 +114,17 @@ if __name__ == '__main__':
     np.save(os.path.join(out, 'amplitudes.npy'), amplitudes[keep])
     with open(os.path.join(out, 'params.py'), 'w') as f:
         f.write(''.join(f'{key} = {value!r}\n' for key, value in {**{k: v for k, v in params.items() if not k.startswith('__')},
-                                                                 'dat_path': session['recording']}.items()))
+                                                                 'dat_path': details['binary']}.items()))
     for name in ['channel_map.npy', 'channel_positions.npy', 'channel_shanks.npy', 'templates.npy',
                  'templates_ind.npy', 'similar_templates.npy', 'whitening_mat.npy', 'whitening_mat_inv.npy']:
         shutil.copy(os.path.join(sort, name), os.path.join(out, name))
     with open(os.path.join(out, 'curation_log.jsonl'), 'w') as f:
         f.writelines(json.dumps(event) + '\n' for event in logged)
     counts = ', '.join(f'{n} {label}' for label, n in info['group'].value_counts().items())
-    print(f'{len(info)} units ({len(merged)} merged, {len(floors)} with an amplitude floor): {counts or "none labelled"}, {int(info["group"].isna().sum())} without a label; '
+    return (f'{len(info)} units ({len(merged)} merged, {len(floors)} with an amplitude floor): {counts or "none labelled"}, {int(info["group"].isna().sum())} without a label; '
           f'{int((~keep).sum())} duplicate spikes dropped')
+
+
+if __name__ == '__main__':
+    sort = os.path.normpath(sys.argv[1])
+    print(export(sort, os.path.join(sort, 'curation', 'curation_log.jsonl'), os.path.join(sort, 'curation', 'phy')))

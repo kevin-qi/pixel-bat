@@ -1,3 +1,3 @@
-name,binary,coordinates,masked_channels,spikes_positive,out
-bat1_260720,/data/bat1/20260720_164544.rec/20260720_164544_merged.kilosort/20260720_164544_merged.group0.dat,/data/bat1/20260720_164544.rec/20260720_164544_merged.kilosort/20260720_164544_merged.group0.coordinates.dat,,True,/results/bat1_260720_ks25
-bat1_260721,/data/bat1/20260721_150210.rec/20260721_150210_merged.kilosort/20260721_150210_merged.group0.dat,/data/bat1/20260721_150210.rec/20260721_150210_merged.kilosort/20260721_150210_merged.group0.coordinates.dat,12 200,True,/results/bat1_260721_ks25
+binary,coordinates,masked_channels,out
+/data/bat1/20260720_164544.rec/20260720_164544_merged.kilosort/20260720_164544_merged.group0.dat,/data/bat1/20260720_164544.rec/20260720_164544_merged.kilosort/20260720_164544_merged.group0.coordinates.dat,,/data/bat1/20260720_164544.rec/kilosort_outdir_probe1
+/data/bat1/20260721_150210.rec/20260721_150210_merged.kilosort/20260721_150210_merged.group0.dat,/data/bat1/20260721_150210.rec/20260721_150210_merged.kilosort/20260721_150210_merged.group0.coordinates.dat,12 200,/data/bat1/20260721_150210.rec/kilosort_outdir_probe1

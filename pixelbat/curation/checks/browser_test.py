@@ -1,4 +1,4 @@
-"""Drive the curation page in a headless browser on a throwaway copy of a session: browser_test.py URL SHOT_DIR.
+"""Drive the curation page in a headless browser on a throwaway copy of a sort: browser_test.py http://localhost:PORT/?sort=SORT SHOT_DIR.
 
 Runs the main interactions, asserts what each must do, times them, and saves a screenshot per step.
 """
@@ -42,7 +42,11 @@ with sync_playwright() as p:
         settle()
 
     page.goto(url)
+    page.wait_for_function("document.getElementById('loading').style.display === 'block'")
+    page.screenshot(path=f'{shots}/00_loading.png')
+    check('a loading card says what is being waited for', 'app:' in page.inner_text('#stepApp') and 'unit data' in page.inner_text('#stepArrays'))
     page.wait_for_function("typeof S !== 'undefined' && !S.loading && S.lines.length > 0 && S.canvases.size > 0", timeout=120000)
+    check('the loading card goes when the sort is drawn', state("document.getElementById('loading').style.display") == 'none')
     print(f'  page usable after {state("performance.now()"):.0f} ms')
     check('no merge group under 500 spikes is listed', state("S.groups.every(g => g.section !== 'groups' || g.units.reduce((sum, id) => sum + unitOf(id).n_spikes, 0) >= 500)"))
     check('a fresh browser opens at the top, on the first merge group', state('list.scrollTop') == 0 and state("S.lines[focusIndex()].type") == 'group')
@@ -256,5 +260,31 @@ with sync_playwright() as p:
     big = state("[...S.units].sort((a, b) => b.n_spikes - a.n_spikes).slice(0, 5).map(u => u.unit)")
     timed('select 5 largest units', f"select({big})")
     step('11_five_largest')
+    # Open dialog
+    sort = state('S.name')
+    page.click('#open')
+    page.wait_for_function("document.getElementById('folders').children.length > 0")
+    step('13_open_dialog')
+    check('Open lists the folder holding the sort', page.input_value('#path') == sort.rsplit('/', 1)[0])
+    check('the open sort is listed as a prepared sort', state("[...document.querySelectorAll('#folders .entry')].some(e => e.children[0].textContent === S.name.split('/').pop() && e.children[1].textContent === 'prepared sort')"))
+    check('the recent sorts include this one, marked as the open one', state("[...document.querySelectorAll('#known tbody tr')].some(r => S.name.endsWith(r.children[0].textContent) && r.className === 'current')"))
+    page.fill('#filter', 'no-such-sort')
+    check('the filter narrows the recent sorts', state("document.querySelectorAll('#known tbody tr').length") == 0)
+    page.fill('#filter', sort.rsplit('/', 1)[1])
+    check('to those whose path has its words', state("[...document.querySelectorAll('#known tbody tr')].some(r => S.name.endsWith(r.children[0].textContent))"))
+    page.fill('#filter', '')
+    page.click('#known th[data-by=decisions]')
+    counts = state("[...document.querySelectorAll('#known tbody tr')].map(r => +r.children[3].textContent).filter(n => !Number.isNaN(n))")
+    check('a column header orders the list by that column', counts == sorted(counts, reverse=True))
+    page.fill('#path', sort + '/curation')
+    page.keyboard.press('Enter')
+    page.wait_for_function("document.getElementById('path').value.endsWith('/curation') && document.getElementById('folders').children.length > 0 && [...document.getElementById('folders').children].some(e => e.textContent.startsWith('cache'))")
+    check('a folder that is not a sort is listed, with no prepare command', state("document.getElementById('folderNote').textContent") == '' and state("document.getElementById('opener').style.display") == 'block')
+    page.fill('#path', sort)
+    page.keyboard.press('Enter')
+    page.wait_for_function("document.getElementById('opener').style.display === 'none' && !S.loading")
+    settle()
+    check('a prepared sort typed into the dialog opens, with its decisions', state('S.name') == sort and state('S.nEvents') > 0)
+    check('the address names the sort', state('new URLSearchParams(location.search).get("sort")') == sort)
     browser.close()
 print(f'{len(failures)} checks failed: {failures}' if failures else 'all checks passed', '| page errors:', errors)

@@ -1378,42 +1378,33 @@ name = "pixelbat"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
+    { name = "bombcell", extra = ["spikeinterface"] },
+    { name = "kilosort" },
     { name = "matplotlib" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pandas" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "tqdm" },
-]
-
-[package.optional-dependencies]
-curation = [
-    { name = "bombcell", extra = ["spikeinterface"] },
-    { name = "kilosort" },
+    { name = "six" },
     { name = "spikeinterface" },
     { name = "torch" },
-]
-sorting = [
-    { name = "kilosort" },
-    { name = "torch" },
+    { name = "tqdm" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "bombcell", extras = ["spikeinterface"], marker = "extra == 'curation'", specifier = "==0.94" },
-    { name = "kilosort", marker = "extra == 'curation'", specifier = "==4.1.7" },
-    { name = "kilosort", marker = "extra == 'sorting'", specifier = "==4.1.7" },
+    { name = "bombcell", extras = ["spikeinterface"], specifier = "==0.94" },
+    { name = "kilosort", specifier = "==4.1.7" },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "scipy" },
-    { name = "spikeinterface", marker = "extra == 'curation'", specifier = "==0.104.9" },
-    { name = "torch", marker = "extra == 'curation'" },
-    { name = "torch", marker = "extra == 'sorting'" },
+    { name = "six", specifier = ">=1.17.0" },
+    { name = "spikeinterface", specifier = "==0.104.9" },
+    { name = "torch" },
     { name = "tqdm" },
 ]
-provides-extras = ["sorting", "curation"]
 
 [[package]]
 name = "probeinterface"
@@ -1793,6 +1784,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/70/b3/c19426f783614d625699a4b247faf628ea9ab1db228674491767b417f9e1/setuptools-84.2.1.tar.gz", hash = "sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc", size = 1230289, upload-time = "2026-10-20T19:01:37.742Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl", hash = "sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2", size = 876263, upload-time = "2026-10-20T19:01:35.678Z" },
+]
+
+[[package]]
+name = "six"
+version = "1.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
 
 [[package]]

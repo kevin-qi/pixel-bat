@@ -23,12 +23,16 @@ def llobet_contamination(seconds, duration, parameters):
 
 
 def foreign_spikes(samples, rate_hz):
-    """Spike pairs of one train 0.25 to 1.25 ms apart, the number its own rate 10 to 50 ms away predicts there, and the
-    share of the unit's spikes from other cells that implies: seen / expected = 1 - (1 - foreign)^2."""
+    """Spike pairs of one train 0.25 to 1.25 ms apart, the number predicted there by the larger of its own rates 10 to 50 ms
+    and 250 to 500 ms away (Kilosort 4's baseline), and the share of the unit's spikes from other cells that implies:
+    seen / expected = 1 - (1 - foreign)^2."""
     samples = samples.astype(np.int64)
-    within = [np.searchsorted(samples, samples + int(lag * rate_hz), side='right').sum() for lag in (0.00025, 0.00125, 0.01, 0.05)]
+    within = [np.searchsorted(samples, samples + int(lag * rate_hz), side='right').sum() for lag in (0.00025, 0.00125, 0.01, 0.05, 0.25, 0.5)]
     seen = within[1] - within[0]
-    expected = (within[3] - within[2]) * (int(0.00125 * rate_hz) - int(0.00025 * rate_hz)) / (int(0.05 * rate_hz) - int(0.01 * rate_hz))
+    window = int(0.00125 * rate_hz) - int(0.00025 * rate_hz)
+    near = (within[3] - within[2]) * window / (int(0.05 * rate_hz) - int(0.01 * rate_hz))
+    far = (within[5] - within[4]) * window / (int(0.5 * rate_hz) - int(0.25 * rate_hz))
+    expected = max(near, far)
     return int(seen), float(expected), 1 - np.sqrt(1 - min(seen / expected, 1)) if expected > 0 else np.nan
 
 

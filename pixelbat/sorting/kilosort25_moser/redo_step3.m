@@ -1,9 +1,8 @@
-function redo_step3(run_dir)
-% Step 3 of Kilosort 2.5 on rez_step2.mat of one run, into <run_dir>/curation: every split made (also those the
+function redo_step3(run_dir, out_dir)
+% Step 3 of Kilosort 2.5 on rez_step2.mat of one run (run_dir), into out_dir: every split made (also those the
 % correlogram dip vetoes in stock), no merge, stock cutoff. Merges of find_merges and the vetoed splits are saved as proposals.
 
 t_all = tic;
-out_dir = fullfile(run_dir, 'curation');
 mkdir(out_dir);
 
 %% Step 2 result

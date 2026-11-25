@@ -1,7 +1,7 @@
-"""Curation cache of one sorted session: pixelbat-curate prepare SESSIONS_CSV NAME --jobs N_JOBS.
+"""Curation cache of one sort folder: pixelbat-curate prepare SORT --jobs N_JOBS.
 
-Reads a Phy-format Kilosort folder and its recording; writes waveforms, waveform metrics over repeated spike draws,
-spike metrics, amplitudes and waveform similarity to <out>/cache.
+Reads the Kilosort output and the binary named in <SORT>/curation/recording.json; writes waveforms, waveform metrics
+over repeated spike draws, spike metrics, amplitudes and waveform similarity to <SORT>/curation/cache.
 """
 import json
 import os
@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import spikeinterface.full as si
+from scipy.signal import butter, sosfiltfilt
 from spikeinterface.core.sorting_tools import random_spikes_selection
 from spikeinterface.core.waveform_tools import estimate_templates_with_accumulator
 from spikeinterface.postprocessing.template_similarity import compute_similarity_with_templates_array
@@ -23,28 +24,57 @@ from pixelbat.curation.waveforms import AMPLITUDE_BINS, SITES, TIME_BINS, WINDOW
 
 t0 = time.time()
 
-## Session
-sessions = pd.read_csv(sys.argv[1], dtype=str).set_index('name')
-session = sessions.loc[sys.argv[2]]
-si.set_global_job_kwargs(n_jobs=int(sys.argv[3]), chunk_duration='1s', progress_bar=False, mp_context='fork',
+## Sort
+sort = os.path.normpath(sys.argv[1])
+si.set_global_job_kwargs(n_jobs=int(sys.argv[2]), chunk_duration='1s', progress_bar=False, mp_context='fork',
                           max_threads_per_worker=1)
+details = json.load(open(os.path.join(sort, 'curation', 'recording.json')))
 # Built in a new folder that replaces the cache when complete
-cache = os.path.join(session['out'], 'cache.partial')
+cache = os.path.join(sort, 'curation', 'cache.partial')
 shutil.rmtree(cache, ignore_errors=True)
 os.makedirs(cache)
 params = {}
-exec(open(os.path.join(session['sort'], 'params.py')).read(), params)
+exec(open(os.path.join(sort, 'params.py')).read(), params)
+
+## Spike sign of the largest good units' mean raw waveforms, against the recorded one
+spike_times = np.load(os.path.join(sort, 'spike_times.npy')).ravel()
+spike_samples = spike_times.astype(np.int64)
+spike_clusters = np.load(os.path.join(sort, 'spike_clusters.npy')).ravel()
+raw = np.memmap(details['binary'], dtype=params['dtype'], mode='r').reshape(-1, params['n_channels_dat'])
+# Three 20 s windows
+starts = (len(raw) * np.array([0.25, 0.5, 0.75])).astype(np.int64)
+length = 20 * int(params['sample_rate'])
+offsets = np.arange(-20, 41)
+kilosort_label = pd.read_csv(os.path.join(sort, 'cluster_KSLabel.tsv'), sep='\t').set_index('cluster_id')['KSLabel']
+kilosort_amplitude = pd.read_csv(os.path.join(sort, 'cluster_Amplitude.tsv'), sep='\t').set_index('cluster_id')['Amplitude']
+window = np.searchsorted(starts, spike_samples, side='right') - 1
+in_window = (window >= 0) & (spike_samples + offsets[0] >= starts[window]) & (spike_samples + offsets[-1] < starts[window] + length)
+count = pd.Series(spike_clusters[in_window]).value_counts()
+eligible = count.index[(count >= 50) & (kilosort_label.reindex(count.index) == 'good').to_numpy()]
+voters = np.sort(kilosort_amplitude.loc[eligible].nlargest(12).index.to_numpy())
+of_voters = in_window & np.isin(spike_clusters, voters)
+sos = butter(3, 300, btype='highpass', fs=params['sample_rate'], output='sos')
+waveform_sum = np.zeros((len(voters), len(offsets), params['n_channels_dat']))
+for w, start in enumerate(starts):
+    highpassed = sosfiltfilt(sos, np.array(raw[start:start + length]).astype(np.float32), axis=0).astype(np.float32)
+    here = of_voters & (window == w)
+    np.add.at(waveform_sum, np.searchsorted(voters, spike_clusters[here]), highpassed[(spike_samples[here] - start)[:, None] + offsets])
+waveform = waveform_sum / count.loc[voters].to_numpy()[:, None, None]
+on_peak = waveform[np.arange(len(voters)), :, np.ptp(waveform, axis=1).argmax(axis=1)]
+deflection = on_peak[np.arange(len(voters)), np.abs(on_peak).argmax(axis=1)]
+n_positive = int(np.sum(deflection > 0))
+print(f'spike sign: {n_positive} of {len(voters)} largest good units positive-going in the raw binary', flush=True)
+assert (n_positive > len(voters) / 2) == details['spikes_positive'], 'spike sign of the sorted units disagrees with recording.json'
 
 ## Recording with negative-going spikes, in uV, high-passed, bad channels interpolated, median-referenced
-channel_map = np.load(os.path.join(session['sort'], 'channel_map.npy')).ravel()
-channel_xy = np.load(os.path.join(session['sort'], 'channel_positions.npy'))
-channel_shank = np.load(os.path.join(session['sort'], 'channel_shanks.npy')).ravel()
-recording = si.read_binary(session['recording'], sampling_frequency=params['sample_rate'], dtype=params['dtype'],
+channel_map = np.load(os.path.join(sort, 'channel_map.npy')).ravel()
+channel_xy = np.load(os.path.join(sort, 'channel_positions.npy'))
+channel_shank = np.load(os.path.join(sort, 'channel_shanks.npy')).ravel()
+recording = si.read_binary(details['binary'], sampling_frequency=params['sample_rate'], dtype=params['dtype'],
                            num_channels=params['n_channels_dat'])
 recording = recording.select_channels(recording.channel_ids[channel_map])
 recording.set_channel_locations(channel_xy)
-gain = float(session['gain_uV'])
-recording = si.scale(recording, gain=gain * {'True': -1, 'False': 1}[session['spikes_positive']], dtype='float32')
+recording = si.scale(recording, gain=details['gain_uV'] * (-1 if details['spikes_positive'] else 1), dtype='float32')
 recording.set_channel_gains(1.0)
 recording.set_channel_offsets(0.0)
 recording = si.highpass_filter(recording, freq_min=300.0)
@@ -52,7 +82,7 @@ bad_channels, _ = si.detect_bad_channels(recording, seed=0)
 recording = si.interpolate_bad_channels(recording, bad_channels)
 recording = si.common_reference(recording, reference='global', operator='median')
 print(f'{len(bad_channels)} bad channels interpolated: {list(bad_channels)}', flush=True)
-sorting = si.read_kilosort(session['sort'], keep_good_only=False)
+sorting = si.read_kilosort(sort, keep_good_only=False)
 analyzer = si.create_sorting_analyzer(sorting, recording, sparse=True, format='memory')
 
 ## Waveform metrics on each spike draw
@@ -134,16 +164,14 @@ analyzer.compute('quality_metrics', metric_names=['amplitude_median', 'snr', 'nu
 units = analyzer.get_extension('quality_metrics').get_data()
 
 ## Kilosort's labels; peak channel, depth and shank as Phy gives them
-spike_times = np.load(os.path.join(session['sort'], 'spike_times.npy')).ravel()
-spike_clusters = np.load(os.path.join(session['sort'], 'spike_clusters.npy')).ravel()
-place = cluster_table(spike_times, spike_clusters, np.load(os.path.join(session['sort'], 'spike_templates.npy')).ravel(),
-                      np.load(os.path.join(session['sort'], 'templates.npy')), np.load(os.path.join(session['sort'], 'whitening_mat_inv.npy')),
+place = cluster_table(spike_times, spike_clusters, np.load(os.path.join(sort, 'spike_templates.npy')).ravel(),
+                      np.load(os.path.join(sort, 'templates.npy')), np.load(os.path.join(sort, 'whitening_mat_inv.npy')),
                       channel_map, channel_xy, channel_shank, recording.get_num_samples() / params['sample_rate'])
 units[['ch', 'depth', 'sh']] = place.loc[units.index, ['ch', 'depth', 'sh']]
 templates = analyzer.get_extension('templates').get_data()
 for column, file in [('KSLabel', 'cluster_KSLabel.tsv'), ('ContamPct', 'cluster_ContamPct.tsv'),
                      ('Amplitude', 'cluster_Amplitude.tsv')]:
-    table = pd.read_csv(os.path.join(session['sort'], file), sep='\t').set_index('cluster_id')
+    table = pd.read_csv(os.path.join(sort, file), sep='\t').set_index('cluster_id')
     units[column] = table.iloc[:, 0].reindex(units.index).to_numpy()
 units.index.name = 'cluster_id'
 units.to_csv(os.path.join(cache, 'units.csv'))
@@ -170,6 +198,6 @@ with open(os.path.join(cache, 'recording.json'), 'w') as f:
                'bad_channels': [int(c) for c in bad_channels]}, f)
 np.save(os.path.join(cache, 'channel_positions.npy'), channel_xy)
 
-shutil.rmtree(os.path.join(session['out'], 'cache'), ignore_errors=True)
-os.replace(cache, os.path.join(session['out'], 'cache'))
-print(f'{sys.argv[2]}: {len(units)} units; {time.time() - t0:.0f} s')
+shutil.rmtree(os.path.join(sort, 'curation', 'cache'), ignore_errors=True)
+os.replace(cache, os.path.join(sort, 'curation', 'cache'))
+print(f'{sort}: {len(units)} units; {time.time() - t0:.0f} s')

@@ -1,7 +1,7 @@
-function run_ks25_moser(binary, coordinates_mat, n_chan, sign, nblocks, fproc_dir, out_dir)
-% Kilosort 2.5 with the Moser patch set on one recording: the uncut, unmerged sort as a Phy folder, with the merges
-% and splits of step 3 computed on copies and saved as proposals; then redo_step3 writes the split, cut sort into
-% curation/. Needs Kilosort-2.5-moser and npy-matlab on the path.
+function run_ks25_moser(binary, coordinates_mat, n_chan, sign, nblocks, fproc_dir, out_dir, sort_dir)
+% Kilosort 2.5 with the Moser patch set on one recording: the uncut, unmerged sort as a Phy folder in out_dir, with the
+% merges and splits of step 3 computed on copies and saved as proposals; then redo_step3 writes the split, cut sort into
+% sort_dir. Needs Kilosort-2.5-moser and npy-matlab on the path.
 
 mkdir(out_dir);
 
@@ -208,4 +208,4 @@ fprintf(fid, '%s', jsonencode(info));
 fclose(fid);
 
 %% Split, cut sort for curation
-redo_step3(out_dir);
+redo_step3(out_dir, sort_dir);
